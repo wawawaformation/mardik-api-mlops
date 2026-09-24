@@ -1,0 +1,20 @@
+:80 {
+	handle /v1/* {
+		reverse_proxy app:8000
+	}
+	handle /v2/* {
+		reverse_proxy v2:8000
+	}
+	handle /pilotage/* {
+		reverse_proxy serveur_pilotage:8000
+	}
+	handle /analyse {
+		reverse_proxy app:8000
+	}
+	handle /gateway/* {
+		reverse_proxy app:8000
+	}
+	handle {
+		respond "mardik-api-mlops - Caddy en frontal" 200
+	}
+}

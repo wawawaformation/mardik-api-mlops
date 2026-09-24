@@ -118,3 +118,17 @@ services:
       - "8503:8503"
     volumes:
       - ./client_web:/app/client_web
+
+  # Caddy en frontal : point d'entrée unique, route par chemin vers les
+  # containers existants. Caddyfile statique (pas de régénération dynamique
+  # par serveur_pilotage — topologie cible complète = chantier 2).
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "8090:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - app
+      - v2
+      - serveur_pilotage
