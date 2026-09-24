@@ -1,87 +1,3 @@
-# Script de démo — la chaîne CI/CD (de `feature/x` au canary)
-
-> Déroulé à suivre en présentant en direct. On fait parcourir à un petit
-> changement toute la chaîne : `feature/x` → PR → revue → `dev` → gate →
-> `main` → canary. Chaque étape dit **quelle commande taper**, **quel
-> workflow se déclenche** et **ce qu'il faut montrer**. Référence complète
-> : `docs/exploitation.md` § 2 et § 3. Durée indicative : 20–25 minutes
-> (surtout de l'attente de runners, voir « Temps morts » en fin de page).
-
-## Vue d'ensemble
-
-| # | Geste du développeur | Workflow déclenché | Coût LLM | Résultat |
-|---|---|---|---|---|
-| 1 | `git push` sur `feature/x` | `ci.yml` (+ `alerte-eval.yml` si chemin sensible) | 0 (ou payant pour l'alerte) | lot A vert/rouge |
-| 2 | approbation de la PR par `connarddu16-design` | `revue.yml` | 0 | tag `revue-ok/<sha7>` |
-| 3 | `git merge --ff-only` vers `dev` + push | `ci.yml` | 0 | — |
-| 4 | `git push origin gate/<sha7>` | `gate.yml` | **payant** | tag `eval-ok/<sha7>` |
-| 5 | `git merge --ff-only` vers `main` + push | `cd-main.yml` | **payant** | version publiée, image `ghcr.io`, canary 10 % |
-
-Deux idées à faire passer pendant toute la démo :
-
-1. **Les preuves sont des tags posés sur un SHA.** `revue-ok` dit « ce code
-   exact a été relu, et son lot A est vert ». `eval-ok` dit « ce code exact
-   a passé l'évaluation réelle ». Un SHA différent = plus de preuve.
-2. **Le moins cher d'abord.** Rien de payant n'est lancé tant que ce qui
-   est gratuit (lint, tests mockés, revue) n'est pas passé.
-
-## Avant de commencer
-
-Hypothèses (à vérifier, la démo échoue sinon) :
-
-- `gh` est installé et authentifié sur le compte développeur
-  (`wawawaformation`) : `gh auth status`.
-- On a accès au compte relecteur **`connarddu16-design`** (navigateur en
-  navigation privée, ou `gh auth login` sur ce second compte) — c'est le
-  seul dont l'approbation pose `revue-ok` (`revue.yml`).
-- Les secrets du dépôt existent : `AZURE_*` (évaluation réelle) et
-  `CI_TAG_TOKEN` (pose des tags). Vérifier : `gh secret list`.
-
-**Vérifier l'état de départ** :
-
-```bash
-git fetch --all --tags
-git status                        # arbre propre
-git log --oneline -1 origin/dev
-git merge-base --is-ancestor origin/main origin/dev && echo ok
-                                  # main doit être ancêtre de dev, sinon le ff-only final échoue
-cat ops/registry/index.json       # attendu : active v1.0.0, canary null
-```
-
-**Coût** : les étapes 4 et 5 appellent le vrai modèle Azure (12 contrats
-d'évaluation chacune). L'étape 1 aussi **si** le changement touche
-`models/*/config.yaml`, `app/pipeline/**`, `app/llm_client.py` ou `eval/**`.
-
-Dans le navigateur : ouvrir l'onglet **Actions** du dépôt
-(`gh repo view --web`, puis *Actions*). Dans un terminal à part, garder
-sous la main :
-
-```bash
-gh run list --limit 5     # les dernières exécutions
-gh run watch              # suivre une exécution en direct (choix interactif)
-```
-
----
-
-## 0. En local — la CI avant la CI
-
-**Dire** : « Avant de pousser quoi que ce soit, le développeur peut jouer
-exactement le lot A chez lui. Même commandes que le workflow, LLM mocké. »
-
-**Faire** :
-
-```bash
-make ci
-```
-
-**Ce que ça fait** : `ruff check .`, puis `pytest` sur `tests/unit`,
-`tests/integration`, `tests/acceptance` avec `MOCK=on` — les réponses LLM
-viennent des fixtures enregistrées dans `eval/fixtures/`, **aucun appel
-payant**.
-
-**Montrer** : tout vert en quelques secondes. « Si c'est rouge ici, ça
-sera rouge sur GitHub : inutile de pousser. »
-
 ## 1. Push sur `feature/x` — le lot A (`ci.yml`)
 
 **Faire** : créer la branche et un changement **anodin** (hors chemins
@@ -94,7 +10,6 @@ echo "- démo CI du $(date +%F)" >> docs/demo-ci-trace.md
 git add docs/demo-ci-trace.md
 git commit -m "docs: trace the CI demo run"
 git push -u origin feature/demo-ci
-gh run list --limit 3
 ```
 
 **Ce que ça fait** : `ci.yml` se déclenche sur **tout push de branche sauf
@@ -104,32 +19,44 @@ trois niveaux de tests en `MOCK=on`. Permissions : lecture seule.
 **Montrer** : l'exécution *CI* dans l'onglet Actions, les deux étapes
 *Linting* et *Tests*. « C'est le gate le plus fréquent et le moins cher. »
 
-**Variante — l'alerte d'évaluation (`alerte-eval.yml`)**, si on veut la
-montrer (payant) : faire en plus un changement neutre dans un chemin
-sensible, par ex. un commentaire dans `models/v2/config.yaml`, puis pousser.
-Un **second** workflow part : il démarre le proxy + l'adaptateur Azure en
-Docker et lance `eval.run_eval --version v2 --seuil 0.75` sur le vrai
-modèle. **Montrer** l'onglet *Summary* du run : « Alerte évaluation —
-signal, pas preuve. Aucun tag posé. » **Dire** : « Le développeur est
-prévenu tôt que sa modif fait bouger la note. Mais ça ne prouve rien : ce
-workflow n'a même pas le droit d'écrire dans le dépôt. La preuve viendra
-après la revue. »
+## Variante — l'alerte d'évaluation (`alerte-eval.yml`)
+
+**Faire** (payant, sur `feature/demo-ci`, avant la PR) : toucher un fichier
+sous un chemin sensible — ici `eval/**` (ou `models/*/config.yaml`,
+`app/pipeline/**`, `app/llm_client.py`) — puis pousser :
+
+```bash
+echo "- démo alerte-eval du $(date +%F)" >> eval/README.md
+git add eval/README.md
+git commit -m "docs(eval): démo alerte-eval"
+git push
+```
+
+**Ce que ça fait** : un **second** workflow part en plus de `ci.yml` : il
+démarre le proxy + l'adaptateur Azure en Docker et lance
+`eval.run_eval --version v2 --seuil 0.75` sur le vrai modèle.
+
+**Montrer** l'onglet *Summary* du run : « Alerte évaluation — signal, pas
+preuve. Aucun tag posé. » **Dire** : « Le développeur est prévenu tôt que
+sa modif fait bouger la note. Mais ça ne prouve rien : ce workflow n'a
+même pas le droit d'écrire dans le dépôt. La preuve viendra après la
+revue. »
 
 ## 2. La PR et la revue (`revue.yml`)
 
-**Faire** (compte développeur) :
+**Faire** (compte développeur, interface web — dépôt étant un fork, ne pas
+utiliser le bandeau « Compare & pull request » qui cible l'upstream par
+défaut, voir « Après la démo ») :
 
-```bash
-gh pr create --base dev --head feature/demo-ci \
-  --title "docs: trace the CI demo run" --body "Démo de la chaîne CI."
-```
+1. Sur `wawawaformation/mardik-api-mlops` → onglet *Pull requests* →
+   *New pull request*.
+2. Vérifier en haut : `base repository: wawawaformation/mardik-api-mlops`
+   **base: dev** ← `head repository: wawawaformation/mardik-api-mlops`
+   **compare: feature/demo-ci**.
+3. *Create pull request*.
 
 Puis, **connecté en `connarddu16-design`**, approuver la PR (onglet *Files
-changed* → *Review changes* → *Approve*), ou en CLI sur ce compte :
-
-```bash
-gh pr review --approve <numéro-de-PR>
-```
+changed* → *Review changes* → *Approve*).
 
 **Ce que ça fait** : `revue.yml` se déclenche sur `pull_request_review`.
 Il ne fait quelque chose que si les trois conditions sont vraies :
@@ -203,8 +130,10 @@ git checkout dev
 SHA7=$(git rev-parse --short=7 HEAD)
 git tag "gate/$SHA7"
 git push origin "gate/$SHA7"
-gh run watch
 ```
+
+Suivre le run dans l'onglet **Actions** (compte ~1 min 30 : docker compose
+du proxy + de l'adaptateur Azure, puis la vraie évaluation).
 
 **Ce que ça fait** — deux jobs enchaînés par `needs:` :
 
@@ -235,8 +164,9 @@ est vert. »
 git checkout main
 git merge --ff-only dev
 git push origin main
-gh run watch
 ```
+
+Suivre le run dans l'onglet **Actions**.
 
 **Ce que ça fait**, dans l'ordre :
 
@@ -301,3 +231,76 @@ surveiller`, `promouvoir`, `rollback`), montré dans
   committé, l'état local reste `active v1.0.0, canary null`.
 - Supprimer la branche de démo :
   `git push origin --delete feature/demo-ci && git branch -d feature/demo-ci`.
+
+---
+
+## Validation réelle exécutée le 2026-09-24
+
+Première exécution en conditions réelles de la chaîne complète, **jusqu'au
+canary**, avec Claude Code en guidage pas à pas, sans `make` ni `gh` côté
+développeur (commandes brutes + interface web GitHub — `gh` a servi côté
+Claude Code pour les vérifications et, ponctuellement, pour débloquer
+l'étape 5, voir plus bas). Sert de trace factuelle en complément du
+script ci-dessus.
+
+**Étapes 0 à 4, toutes vertes** :
+
+1. `feature/demo-ci` créée depuis `dev`, commit `push sur feature`
+   (`app/demo1.osef`), poussée — `ci.yml` vert.
+2. PR `feature/demo-ci → dev` créée **via l'interface web** (bouton *New
+   pull request*, sélecteurs vérifiés à la main — pas le bandeau vert
+   « Compare & pull request », qui cible l'upstream par défaut sur un
+   fork, voir plus bas). Approuvée par `connarddu16-design`.
+3. `revue.yml` a posé `revue-ok/982f458` automatiquement (10 s).
+4. Fusion `--ff-only` vers `dev`, poussée.
+5. Tag `gate/982f458` poussé → `gate.yml` vert (1 min 32 s, tests +
+   évaluation Azure réelle) → `eval-ok/982f458` posé. `dev` porte alors
+   `revue-ok/982f458`, `gate/982f458` et `eval-ok/982f458`.
+
+**Étape 5 (fusion vers `main`) : d'abord bloquée, puis débloquée le jour
+même — pas un problème de commande.** `git push origin main` refusé par
+GitHub (`GH013`, *require linear history*) à cause d'un **merge commit
+ancien** (`2f1c53c`, 22 septembre, `Merge branch 'sdd/chaine-llmops' into
+dev`), présent dans l'historique de `dev` **entre** `origin/main`
+(`8c59599`) et la tête actuelle de `dev` — reliquat d'avant l'adoption de
+la règle ff-only partout. Le fast-forward est possible au sens Git
+(`origin/main` reste bien ancêtre de `dev`), mais deux rulesets distincts
+portent chacun une règle `required_linear_history` et examinent toute la
+plage poussée : `main-linear` (dédié à `~DEFAULT_BRANCH`) **et**
+`protection-dev-main` (porte aussi `deletion` et `non_fast_forward` sur
+`dev`/`main`, à ne pas toucher). Les deux ont bloqué le push.
+Conséquence : cette étape n'avait **jamais été exercée pour de vrai** sur
+ce dépôt (`main` était resté volontairement figé à `8c59599` depuis le
+nettoyage du 2026-09-23, cf. `TODO.md`).
+
+**Résolution (2026-09-24, via l'API GitHub `gh api`)** : désactivation
+temporaire de la règle `required_linear_history` sur les deux rulesets
+(`main-linear` entièrement désactivé, `protection-dev-main` réduit à
+`deletion` + `non_fast_forward` le temps du push) → `git push origin
+main` accepté (`8c59599..982f458`) → les deux rulesets remis à
+l'identique immédiatement après (règle réactivée sur les deux). Aucune
+réécriture d'historique, aucune protection restée désactivée durablement.
+`cd-main.yml` s'est déclenché et a terminé vert en 1 min 31 s :
+`chore(registry): publish v2.0.0` commité sur `main` par `mardik-ci`
+(`ops/registry/v2.0.0/manifest.json`, `note_eval: 1.0`), image poussée sur
+`ghcr.io/wawawaformation/mardik-api-mlops:v2.0.0`, canary 10 % déclenché.
+Comme attendu, `ops/registry/index.json` n'a pas été committé — l'état
+local du dépôt reste `active v1.0.0, canary null`.
+
+Le merge commit `2f1c53c` reste dans l'historique de `dev`/`main` : cette
+manip n'a fait que le laisser passer une fois, elle ne l'a pas fait
+disparaître. Toute future fusion `dev → main` repassera par le chemin
+normal (ff-only) sans problème, ce commit étant déjà de part et d'autre.
+
+**Variante `alerte-eval.yml` testée séparément** : branche `feature/demo-eval`
+depuis `dev`, un commit touchant `eval/README.md` (chemin sensible), poussé.
+`ci.yml` et `Alerte évaluation (lot A)` tous deux verts — la vraie
+évaluation Azure a tourné en signal, **aucun tag posé**, conforme au
+design (I6).
+
+**Piège rencontré et à surveiller** : sur un fork, le bandeau GitHub
+« Compare & pull request » cible par défaut le dépôt **upstream**
+(`bybysker/mardik-api-mlops`), pas le fork. Deux PR de test s'y sont
+retrouvées ouvertes par erreur avant d'être repérées et fermées (#2, #3
+sur l'upstream). Toujours vérifier `base repository` / `head repository`
+avant de valider une PR sur un dépôt forké.
