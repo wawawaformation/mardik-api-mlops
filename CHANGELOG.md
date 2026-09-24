@@ -2,6 +2,48 @@
 
 > Tracé horodaté, ordre inverse (plus récent en premier).
 
+## 2026-09-24 (soir — Caddy en frontal + client web branché)
+
+- **Branche `feature/demo-ci`, 3 commits, non fusionnée** (PR à ouvrir
+  demain avant la démo) :
+  - `be50066` : Caddy simple ajouté (`Caddyfile` statique + service
+    `caddy` dans `docker-compose.yml`, port hôte **8090**). Route
+    `/v1`→`app`, `/v2`→`v2`, `/pilotage`→`serveur_pilotage`,
+    `/analyse`+`/gateway`→`app`. Pas de régénération dynamique du
+    Caddyfile (ça reste le chantier 2 de `docs/spec-v2.md` §4).
+  - `d6e4fbc` : piste « télémétrie » ajoutée à `docs/img/pipeline-v2.png`
+    (fichier:ligne exact de chaque capture, `app/api_v2.py` +
+    `app/telemetry.py`).
+  - `94939c9` : `client_web` branché derrière Caddy (route `/` du
+    Caddyfile) et `client_web/app.js` passé en `API_BASE` relatif
+    (`""` au lieu de `http://localhost:8002` en dur) — marche out of
+    the box une fois servi par Caddy, sans souci de CORS. Ajout de
+    `docs/fiche-demo-caddy.md` (aide-mémoire démo) et de
+    `bruno/caddy/` (5 requêtes qui simulent un client externe passant
+    uniquement par le port 8090 : accueil, `/v1`, `/v2`, `/gateway/etat`,
+    `/pilotage/dashboard`).
+  - Testé en `curl` (tous les endpoints via 8090 → 200/422 attendus).
+    **Pas encore testé visuellement** (navigateur + app Bruno) : lancement
+    GUI tenté en fin de session sans retour visible (pas de prise fiable
+    sur l'affichage depuis cette session) — à faire en live demain matin.
+
+### À reprendre demain matin, dans l'ordre
+
+1. Ouvrir `http://localhost:8090/` dans le navigateur (client de pilotage
+   servi par Caddy) — vérifier visuellement que les pages s'affichent et
+   que les données du tableau de bord chargent.
+2. Ouvrir l'app **Bruno**, *Open Collection* sur le dossier `bruno/`,
+   dérouler `bruno/caddy/` (5 requêtes numérotées).
+3. Démo live : lancer `02-v1-analyse` et `03-v2-analyse` dans Bruno,
+   rafraîchir `journal.html`/`index.html` dans le navigateur → les
+   requêtes envoyées par Bruno doivent apparaître dans le dashboard (deux
+   clients différents, même point d'entrée Caddy).
+4. Si tout est bon : ouvrir la PR `feature/demo-ci → dev`, faire approuver
+   par `connarddu16-design`, gate, puis fusion vers `main` (voir
+   `docs/demo-ci.md` / `docs/demo-ci.sh` pour la procédure pas à pas).
+5. Repenser à l'export ffmpeg (`video/source_norm.mkv`, -14 LUFS + légère
+   compression) si besoin pour le montage.
+
 ## 2026-09-24 (infrastructure GitHub + script de démo CI/CD)
 
 - **Infrastructure GitHub mise en place** :

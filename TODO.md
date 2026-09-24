@@ -267,7 +267,15 @@ Plan exécuté le 2026-09-23 sur `feature/chaine-llmops-intents` :
       `docker-compose.yml`, healthchecks Python sur `/health`, vérifiés avec
       `docker compose up -d --build --wait`
 - [ ] Topologie cible complète de `docs/spec-v2.md` §4 : container v1 isolé,
-      container gateway, Caddy en frontal — **après validation CI/CD**
+      container gateway — **après validation CI/CD**
+- [x] Caddy simple en frontal (2026-09-24, branche `feature/demo-ci`, pas
+      encore fusionnée) : `Caddyfile` statique (port hôte 8090), route
+      `/v1`, `/v2`, `/pilotage`, `/analyse`+`/gateway`, et `/` vers
+      `client_web` (branché derrière Caddy, `API_BASE` relatif). Testé en
+      `curl` seulement — **vérification visuelle navigateur + Bruno à
+      faire demain matin**, voir `CHANGELOG.md` du 2026-09-24 (soir).
+      Reste hors périmètre : régénération dynamique du Caddyfile par
+      `serveur_pilotage` (chantier 2).
 - [x] Vérifier que les tests d'intégration v1 restent verts (`make test-integration`)
 - [ ] `make test-acceptance` : 9 rouges / 1 vert au départ (`test_client_v1_fonctionne`),
       objectif = tout vert
