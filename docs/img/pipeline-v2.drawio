@@ -153,6 +153,60 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
+        <!-- ===================== TÉLÉMÉTRIE (fichier:ligne) ===================== -->
+        <mxCell id="tel-titre" value="Télémétrie capturée à chaque étape — fichier:ligne (app/telemetry.py :: MetricsStore, Mesure)" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontStyle=1;fontColor=#9A6500;" vertex="1" parent="1">
+          <mxGeometry x="35" y="665" width="900" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tel-precoce" value="app/api_v2.py:116-120&#10;Si len(texte) &gt; LIMITE_CARACTERES :&#10;Mesure(erreur=True, latence_ms=0)&#10;AVANT le span — DocumentTropLong&#10;levée, pipeline jamais lancé." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=10;align=left;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="35" y="700" width="220" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="tan-precoce" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#D79B00;strokeWidth=1;exitX=0.15;exitY=0.5;entryX=0.5;entryY=0;" edge="1" parent="1" source="d-in" target="tel-precoce">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tel-decoupage" value="app/api_v2.py:123-126&#10;Ouverture du span analyse.requete ICI&#10;(englobe tout le pipeline).&#10;decouper() → app/pipeline/decoupage.py:43&#10;Attribut mardik.sections = len(sections)." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=10;align=left;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="280" y="700" width="240" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="tan-decoupage" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#D79B00;strokeWidth=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e-decoupage" target="tel-decoupage">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tel-extraction" value="app/api_v2.py:96-111&#10;Par section (thread pool) : span llm.appel&#10;— attributs llm.latence_ms, llm.tokens,&#10;llm.clauses. extraire() → app/pipeline/&#10;extraction.py:38.&#10;app/api_v2.py:138-148 : ErreurLLM →&#10;Mesure(erreur=True) immédiate, pipeline&#10;interrompu." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=10;align=left;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="650" y="700" width="260" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="tan-extraction" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#D79B00;strokeWidth=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e-extraction" target="tel-extraction">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tel-consolidation" value="app/api_v2.py:156&#10;consolider() → app/pipeline/&#10;consolidation.py:20.&#10;Aucune mesure dédiée à cette étape." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=10;align=left;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="700" width="230" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="tan-consolidation" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#D79B00;strokeWidth=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e-consolidation" target="tel-consolidation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tel-confiance" value="app/api_v2.py:157&#10;scorer() → app/pipeline/confiance.py:40.&#10;app/api_v2.py:159-171 : en sortie du&#10;pipeline, Mesure(latence_ms totale,&#10;score=confiance_globale,&#10;cout_eur=Σ coût, appels_llm=len(sections),&#10;tokens=Σ tokens) →&#10;telemetry.metriques.enregistrer()." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=10;align=left;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="1550" y="700" width="280" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="tan-confiance" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;dashed=1;strokeColor=#D79B00;strokeWidth=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e-confiance" target="tel-confiance">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tel-mesure" value="Mesure" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D79B00;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1870" y="720" width="110" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="tan-mesure" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#D79B00;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="tel-confiance" target="tel-mesure">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="tel-fichier" value="ops/metrics.jsonl&#10;(app/telemetry.py:32, 76-79)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;align=center;" vertex="1" parent="1">
+          <mxGeometry x="2040" y="735" width="190" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="tan-fichier" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=block;endFill=1;strokeColor=#D79B00;strokeWidth=2;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="tel-mesure" target="tel-fichier">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
       </root>
     </mxGraphModel>
   </diagram>
