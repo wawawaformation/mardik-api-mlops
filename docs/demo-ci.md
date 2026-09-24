@@ -21,6 +21,20 @@ trois niveaux de tests en `MOCK=on`. Permissions : lecture seule.
 
 ## Variante — l'alerte d'évaluation (`alerte-eval.yml`)
 
+**Les 4 chemins sensibles** qui déclenchent ce workflow (sur `feature/**`) :
+
+| Chemin                 | Ce que c'est                                                                                                   | Pourquoi il est sensible                                                          |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `models/*/config.yaml` | Config du modèle par version (`v1`, `v2`) — stratégie, prompts par section, schéma de sortie, température/seed | Change directement ce qu'on demande au LLM                                        |
+| `app/pipeline/**`      | Le pipeline v2 réel : découpage, extraction, consolidation, score de confiance                                 | Change le comportement du code qui produit le résultat                            |
+| `app/llm_client.py`    | Le client qui appelle le LLM (Azure/Ollama)                                                                    | Change *comment* on parle au modèle (retries, parsing, etc.)                      |
+| `eval/**`              | Le gate d'évaluation lui-même (`run_eval.py`, fixtures, historique)                                            | Change *comment on mesure* — un gate cassé pourrait laisser passer n'importe quoi |
+
+Logique commune : ce sont les 4 endroits où une modification peut faire
+bouger la note (`note_eval`) sans que ce soit visible dans `ci.yml` (qui
+tourne en mock, donc insensible à un vrai changement de comportement du
+modèle).
+
 **Faire** (payant, sur `feature/demo-ci`, avant la PR) : toucher un fichier
 sous un chemin sensible — ici `eval/**` (ou `models/*/config.yaml`,
 `app/pipeline/**`, `app/llm_client.py`) — puis pousser :
@@ -69,6 +83,12 @@ ensuite que `ci.yml` ait conclu `success` sur le SHA de tête** (jusqu'à
 ```bash
 git fetch --tags
 git tag --points-at HEAD          # revue-ok/<sha7>
+
+
+## ou 
+git checkout feature/training-ci && git pull
+git tag --points-at HEAD
+
 ```
 
 Et dans les logs du run : `[ok] lot A vert sur <sha>` puis
@@ -221,7 +241,7 @@ surveiller`, `promouvoir`, `rollback`), montré dans
 
 - `main` a **un commit de plus** que `dev` (`chore(registry): publish …`).
   Réaligner avant la prochaine fusion ff-only :
-
+  
   ```bash
   git checkout dev && git merge --ff-only origin/main && git push origin dev
   ```
@@ -229,6 +249,7 @@ surveiller`, `promouvoir`, `rollback`), montré dans
 - Le dossier `ops/registry/<version>/` reste dans l'historique de `main`
   (voulu : c'est la trace de la publication). `index.json` n'ayant pas été
   committé, l'état local reste `active v1.0.0, canary null`.
+
 - Supprimer la branche de démo :
   `git push origin --delete feature/demo-ci && git branch -d feature/demo-ci`.
 
