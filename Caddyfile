@@ -15,6 +15,6 @@
 		reverse_proxy app:8000
 	}
 	handle {
-		respond "mardik-api-mlops - Caddy en frontal" 200
+		reverse_proxy client_web:8503
 	}
 }

@@ -1,0 +1,17 @@
+meta {
+  name: 5. Pilotage — tableau de bord, via Caddy
+  type: http
+  seq: 5
+}
+
+get {
+  url: http://localhost:8090/pilotage/dashboard
+  body: none
+  auth: none
+}
+
+docs {
+  Vérifie le handle /pilotage/* du Caddyfile (-> serveur_pilotage).
+  C'est exactement l'appel que fait client_web/app.js une fois servi
+  par Caddy (API_BASE relatif, même origine que la page).
+}

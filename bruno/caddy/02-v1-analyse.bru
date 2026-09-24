@@ -1,0 +1,27 @@
+meta {
+  name: 2. v1 — via Caddy (/v1/analyse -> app)
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:8090/v1/analyse
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "texte": "Le présent contrat est conclu pour une durée de 12 mois, renouvelable par tacite reconduction sauf dénonciation avec un préavis de deux mois. En cas de résiliation anticipée pour faute grave, la partie défaillante s'expose à une pénalité de retard de 1 % par semaine sur les sommes dues. Le prix des prestations est fixé à 15 000 euros HT, payable à réception de facture. Les parties s'engagent à une stricte confidentialité sur les informations échangées. Le présent contrat est soumis au droit français, tout litige relève des tribunaux de Paris."
+  }
+}
+
+docs {
+  Même requête que bruno/v1/analyse-contrat-court.bru, mais adressée au
+  port Caddy (8090) au lieu du port direct de `app` (8000). Vérifie le
+  handle /v1/* du Caddyfile.
+}

@@ -1,0 +1,28 @@
+meta {
+  name: 3. v2 — via Caddy (/v2/analyse -> v2 isolé)
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8090/v2/analyse
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "texte": "Le présent contrat est conclu pour une durée de 12 mois, renouvelable par tacite reconduction sauf dénonciation avec un préavis de deux mois. En cas de résiliation anticipée pour faute grave, la partie défaillante s'expose à une pénalité de retard de 1 % par semaine sur les sommes dues. Le prix des prestations est fixé à 15 000 euros HT, payable à réception de facture. Les parties s'engagent à une stricte confidentialité sur les informations échangées. Le présent contrat est soumis au droit français, tout litige relève des tribunaux de Paris."
+  }
+}
+
+docs {
+  Même texte que la requête v1, mais routé par Caddy vers le container
+  v2 isolé (v2:8000 en interne, 8001 côté hôte). Vérifie le handle
+  /v2/* du Caddyfile — et incidemment que v1 et v2 sont bien deux
+  containers différents (comparer les temps de réponse / les clauses).
+}

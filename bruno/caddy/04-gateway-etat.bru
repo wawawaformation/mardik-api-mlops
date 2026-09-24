@@ -1,0 +1,17 @@
+meta {
+  name: 4. Gateway — état, via Caddy
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:8090/gateway/etat
+  body: none
+  auth: none
+}
+
+docs {
+  Vérifie le handle /gateway/* du Caddyfile (-> app, dispatch en
+  process). Attendu : {"active": "...", "canary": ..., "canary_percent":
+  ...} — le même que bruno/gateway/etat-gateway.bru, mais via 8090.
+}

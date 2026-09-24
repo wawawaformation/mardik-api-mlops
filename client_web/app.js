@@ -2,7 +2,10 @@
 // Toute écriture passe par l'API du serveur de pilotage (ops/serveur_pilotage.py) ;
 // ce fichier ne fait que lire/afficher/poster, il ne décide de rien.
 
-const API_BASE = window.MARDIK_API_BASE || "http://localhost:8002";
+// Vide par défaut : les appels /pilotage/* partent en relatif, vers la
+// même origine que la page. Servi via Caddy (port 8090), ça atteint
+// automatiquement serveur_pilotage sans souci de CORS.
+const API_BASE = window.MARDIK_API_BASE || "";
 
 const LIBELLE_SIGNAL = {
   latence_p95: "Latence P95",

@@ -132,3 +132,4 @@ services:
       - app
       - v2
       - serveur_pilotage
+      - client_web

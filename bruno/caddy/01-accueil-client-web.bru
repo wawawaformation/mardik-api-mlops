@@ -1,0 +1,18 @@
+meta {
+  name: 1. Accueil — client web servi par Caddy
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8090/
+  body: none
+  auth: none
+}
+
+docs {
+  Caddy (port 8090) sert directement client_web (proxy vers le container
+  client_web:8503). Attendu : 200, la page index.html du client de
+  pilotage. Vérifie que le point d'entrée unique fonctionne pour la
+  page comme pour l'API.
+}
