@@ -1,0 +1,9 @@
+{
+  "version": "v2.0.1",
+  "commit": "819ca4a",
+  "empreinte": "e2c57b944d41",
+  "modele": "gpt-5.4-mini",
+  "strategie": "map_reduce_clauses",
+  "note_eval": 1.0,
+  "date": "2026-09-24T18:06:25+00:00"
+}
