@@ -22,7 +22,10 @@ poussés, PR vers `dev` toujours à ouvrir.
     flux réel de `POST /analyse` avec le nom des fonctions de
     `app/gateway.py` et `app/telemetry.py` (construction du singleton
     `Telemetry`, spans, logs, `MetricsStore.enregistrer()` / `lire()` et
-    leurs lecteurs).
+    leurs lecteurs), avec le n° de ligne de chaque fonction.
+  - `docs/lecture-schema-flux-gateway-telemetry.md` (nouveau) : guide de
+    lecture simple de ce schéma (code couleur, sens de lecture, numéros de
+    ligne, exemple commenté pendant un canary).
 - **Collections Bruno** :
   - `bruno/demo-cto-caddy/` (nouveau) : le script CTO via Caddy. Textes
     calibrés avec le vrai `decouper()` puis rejoués : 2b (v1) et 3 (v2)
