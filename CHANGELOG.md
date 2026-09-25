@@ -23,7 +23,7 @@ poussés, PR vers `dev` toujours à ouvrir.
     `app/gateway.py` et `app/telemetry.py` (construction du singleton
     `Telemetry`, spans, logs, `MetricsStore.enregistrer()` / `lire()` et
     leurs lecteurs), avec le n° de ligne de chaque fonction.
-  - `docs/lecture-schema-flux-gateway-telemetry.md` (nouveau) : guide de
+  - `docs/img/lecture-schema-flux-gateway-telemetry.md` (nouveau, à côté du schéma) : guide de
     lecture simple de ce schéma (code couleur, sens de lecture, numéros de
     ligne, exemple commenté pendant un canary).
 - **Collections Bruno** :

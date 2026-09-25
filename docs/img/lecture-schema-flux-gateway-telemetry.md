@@ -1,11 +1,11 @@
 # Lire le schéma de flux gateway / telemetry
 
 Ce guide accompagne le schéma
-[flux-gateway-telemetry_reel.drawio](img/flux-gateway-telemetry_reel.drawio)
-(export : [flux-gateway-telemetry_reel.png](img/flux-gateway-telemetry_reel.png)).
+[flux-gateway-telemetry_reel.drawio](flux-gateway-telemetry_reel.drawio)
+(export : [flux-gateway-telemetry_reel.png](flux-gateway-telemetry_reel.png)).
 Il suffit de le lire une fois pour savoir comment parcourir le schéma.
 
-![Flux réel d'une requête POST /analyse](img/flux-gateway-telemetry_reel.png)
+![Flux réel d'une requête POST /analyse](flux-gateway-telemetry_reel.png)
 
 ## Ce que montre le schéma
 
