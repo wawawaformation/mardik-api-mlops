@@ -6,7 +6,7 @@
 > environnement à sélectionner) — chaque étape ci-dessous renvoie au
 > numéro de requête correspondant. Durée indicative : 12–15 minutes.
 >
-> Une collection jumelle, `bruno/mardik-demo-cto/`, existe sur les ports
+> Une collection jumelle, `bruno/secours-ports-directs/`, existe sur les ports
 > directs (8000/8001/8002) sans passer par Caddy — utile en dépannage si
 > Caddy pose problème en direct, mais pas le chemin de démo recommandé :
 > il ne montre pas le point d'entrée unique que Caddy est censé apporter.
