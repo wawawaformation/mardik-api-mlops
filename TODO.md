@@ -272,13 +272,39 @@ Plan exécuté le 2026-09-23 sur `feature/chaine-llmops-intents` :
       encore fusionnée) : `Caddyfile` statique (port hôte 8090), route
       `/v1`, `/v2`, `/pilotage`, `/analyse`+`/gateway`, et `/` vers
       `client_web` (branché derrière Caddy, `API_BASE` relatif). Testé en
-      `curl` seulement — **vérification visuelle navigateur + Bruno à
-      faire demain matin**, voir `CHANGELOG.md` du 2026-09-24 (soir).
-      Reste hors périmètre : régénération dynamique du Caddyfile par
-      `serveur_pilotage` (chantier 2).
+      `curl`, puis vérifié visuellement navigateur + Bruno le 2026-09-25
+      (voir `CHANGELOG.md`). Reste hors périmètre : régénération dynamique
+      du Caddyfile par `serveur_pilotage` (chantier 2).
 - [x] Vérifier que les tests d'intégration v1 restent verts (`make test-integration`)
 - [ ] `make test-acceptance` : 9 rouges / 1 vert au départ (`test_client_v1_fonctionne`),
       objectif = tout vert
+
+## Constats de la répétition de démo (2026-09-25)
+
+- [ ] **Calibrer le score de confiance v2** (`app/pipeline/confiance.py`) :
+      la corroboration `min(1, (n - 1) / 2)` vaut 0 pour une clause vue
+      dans une seule section (cas normal d'un contrat), et le global prend
+      le minimum → score presque toujours nul. Preuve : requêtes 3 (0,99)
+      et 3b (0) de `bruno/demo-cto-caddy/`, mêmes clauses, seule la
+      répétition change. Piste : vérifier que l'extrait figure dans le
+      contrat (paramètre `texte` déjà transmis, inutilisé), revoir
+      l'agrégation `min`. Mettre à jour `tests/unit/pipeline/test_confiance.py`
+      et les tests qui en dépendent ; toucher `app/pipeline/` relance
+      `alerte-eval.yml` (payant). Impacte la règle de rollback `score_faible`.
+- [ ] **Tracer les refus de promotion** au journal : le 409 de
+      `POST /pilotage/promotion` part avant `journaliser`
+      (`ops/serveur_pilotage.py:282-298`).
+- [ ] **Rollback sans canary en cours** : aujourd'hui tracé quand même
+      (lignes identiques avant/après au journal) — refuser (409) ou ne pas
+      tracer.
+- [ ] **Événements récents du tableau de bord** : `message` construit par
+      `", ".join(f"{k}={v}")` (`ops/serveur_pilotage.py:208-217`) → dicts
+      Python bruts à l'écran (`{'active': 'v1.0.0', 'canary': None}`).
+- [ ] **Seuil de coût** (0,15 €) absent de `/pilotage/regles`, donc encore
+      codé en dur dans `client_web/index.html`.
+- [ ] `scripts/traffic_sim.py` vise `http://localhost:8000` par défaut
+      (port direct) : passer `--url http://localhost:8090` pour passer par
+      Caddy.
 
 ## Infrastructure GitHub — Prérequis pour la chaîne
 
@@ -312,7 +338,7 @@ Plan exécuté le 2026-09-23 sur `feature/chaine-llmops-intents` :
       - Appel v1 + v2 + vérifier les métriques
       - Simuler une dérive (`DRIFT=score_moyen`) → vérifier rollback auto via
         `ops/deploy.surveiller` (faire tourner `make traffic` en parallèle)
-      - Vérifier le journal de pilotage + accès au client web (port 8503)
+      - Vérifier le journal de pilotage + accès au client web (port 8090, via Caddy)
       - Documenter le résultat dans un transcript (comme dans `docs/exploitation.md` § 7)
 - [ ] **Topologie Docker complète (optionnel, après le reste)** : container Caddy
       en frontal, v1 isolé, container gateway, régénération Caddyfile dynamique

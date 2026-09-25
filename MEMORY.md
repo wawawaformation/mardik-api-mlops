@@ -620,3 +620,33 @@ d'alerte payante), refus du gate sans `revue-ok` montré en premier
 commit `chore(registry)` sur `main` (réaligner `dev` ensuite) et **ne
 committe pas `ops/registry/index.json`** — l'état du canary posé en CI
 n'arrive pas dans le dépôt (question ouverte dans `TODO.md`).
+
+## Démo via Caddy — pièges connus (2026-09-25)
+
+Caddy (port **8090**) est le point d'entrée de la démo, API et client web
+compris (`client_web` en `API_BASE` relatif : ouvert sur 8503, ses appels
+API partent vers 8503 et échouent en 404 « File not found »). Script :
+`docs/demo-v1-v2-pilotage.md`, collection `bruno/demo-cto-caddy/` ;
+`bruno/secours-ports-directs/` = repli sans Caddy.
+
+Ce qui surprend en direct, tous vérifiés en répétition :
+
+- **Tableau de bord = fenêtre glissante de 5 min** (`FENETRE_DASHBOARD_S`) :
+  sans trafic récent, `0 %/0 %` — pas une panne.
+- **Score de confiance v2 presque toujours à 0** : biais de la formule de
+  corroboration, pas du modèle. Requêtes 3 (0,99) / 3b (0) le prouvent.
+  Ne pas « corriger » à chaud en codant 1 en dur (fausse mesure, désactive
+  la règle `score_faible`, casse les tests, relance l'éval payante).
+- **Promotion : 409 attendu** (10 mesures par version sur 2 min) ; les
+  refus ne sont **pas** journalisés, un rollback sans canary **l'est**.
+- **Le modèle varie** (`MOCK=off`) : une « durée » fantôme apparaît ou non
+  sur le texte de remplissage. Ne promettre dans le script que ce qui a
+  été rejoué.
+
+Outillage : les `.bru` se vérifient avec le parseur officiel
+(`@usebruno/lang`, `bruToJsonV2`) plutôt qu'en faisant retester dans
+l'interface. Deux collections aux noms proches ont déjà été confondues
+(« la requête a disparu ») : vérifier le dossier ouvert avant de chercher
+un bug.
+`ops/registry/journal.jsonl` et `ops/metrics*.jsonl` sont ignorés par git,
+`ops/registry/index.json` est suivi (modifié par chaque test de pilotage).

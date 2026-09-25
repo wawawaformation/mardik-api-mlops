@@ -2,6 +2,46 @@
 
 > Tracé horodaté, ordre inverse (plus récent en premier).
 
+## 2026-09-25 (répétition de la démo via Caddy)
+
+Branche `feature/demo-ci`, 16 commits (`c9f2058` → `0f28585`), non
+poussés, PR vers `dev` toujours à ouvrir.
+
+- **Vérification visuelle faite** (navigateur + Bruno) de la stack derrière
+  Caddy (port 8090) : routage `/v1`, `/v2`, `/analyse`, `/gateway`,
+  `/pilotage` et client web confirmés, en plus des tests `curl`.
+- **Documents de démo** :
+  - `docs/cahier-de-recettes-demo-caddy.md` (nouveau) : scénarios Gherkin
+    à cocher pour valider la stack avant la démo.
+  - `docs/demo-v1-v2-pilotage.md` réécrit pour passer par Caddy (8090)
+    au lieu des ports directs ; étapes 2b, 3, 3b, 8, 9, 10 alignées sur
+    ce que la répétition a réellement montré.
+  - `docs/fiche-demo-caddy.md` : affirmation périmée corrigée
+    (`client_web` utilise bien un `API_BASE` relatif).
+- **Collections Bruno** :
+  - `bruno/demo-cto-caddy/` (nouveau) : le script CTO via Caddy. Textes
+    calibrés avec le vrai `decouper()` puis rejoués : 2b (v1) et 3 (v2)
+    partagent un texte de ~31 700 caractères — v1 tronque et perd la
+    non-concurrence, v2 la retrouve (score 0,99) ; 3b cite chaque clause
+    une seule fois (score 0).
+  - `bruno/caddy/06-gateway-analyse.bru` (nouveau) : `/analyse` via Caddy,
+    version choisie par la gateway.
+  - `bruno/mardik-demo-cto/` renommé `bruno/secours-ports-directs/`
+    (confondu avec la collection Caddy pendant la répétition).
+- **Client web** (`client_web/`) : seuils du tableau de bord et filtre du
+  journal lus depuis `/pilotage/regles` au lieu d'être codés en dur ;
+  boutons « Rafraîchir » / « Auto : 30 s » retirés ; note « fenêtre
+  glissante de 5 minutes » sous le titre, durée lue dans l'API.
+- **Nettoyage** : `app/pipeline/Achtung` supprimé (déclencheur du test CI).
+  Au prochain push, relance `alerte-eval.yml` (évaluation payante).
+- **Constats, reportés dans `TODO.md`** :
+  - score de confiance v2 presque toujours à 0 : la corroboration vaut 0
+    pour une clause vue dans une seule section, et le global prend le
+    minimum ; la formule mesure la répétition, pas la justesse ;
+  - la promotion exige 10 mesures par version sur 2 minutes, un 409 est
+    donc attendu en démo, et les refus ne sont pas tracés au journal ;
+  - un rollback sans canary en cours est tracé quand même.
+
 ## 2026-09-24 (soir — Caddy en frontal + client web branché)
 
 - **Branche `feature/demo-ci`, 3 commits, non fusionnée** (PR à ouvrir
