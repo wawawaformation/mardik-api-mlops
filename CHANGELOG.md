@@ -18,6 +18,11 @@ poussés, PR vers `dev` toujours à ouvrir.
     ce que la répétition a réellement montré.
   - `docs/fiche-demo-caddy.md` : affirmation périmée corrigée
     (`client_web` utilise bien un `API_BASE` relatif).
+  - `docs/img/flux-gateway-telemetry_reel.drawio` (+ `.png`, nouveau) :
+    flux réel de `POST /analyse` avec le nom des fonctions de
+    `app/gateway.py` et `app/telemetry.py` (construction du singleton
+    `Telemetry`, spans, logs, `MetricsStore.enregistrer()` / `lire()` et
+    leurs lecteurs).
 - **Collections Bruno** :
   - `bruno/demo-cto-caddy/` (nouveau) : le script CTO via Caddy. Textes
     calibrés avec le vrai `decouper()` puis rejoués : 2b (v1) et 3 (v2)
