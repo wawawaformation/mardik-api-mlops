@@ -24,10 +24,6 @@
         <label for="filtre-signal">Filtrer par signal</label>
         <select class="select" id="filtre-signal">
           <option value="">Tous les signaux</option>
-          <option value="latence_p95">Latence P95</option>
-          <option value="taux_erreur">Taux d'erreur</option>
-          <option value="score_faible">Score &lt; 0,6</option>
-          <option value="canary">Canary</option>
         </select>
       </div>
     </div>
@@ -65,6 +61,17 @@
       </tr>`;
     }
 
+    async function chargerOptionsSignal() {
+      const select = document.getElementById("filtre-signal");
+      const { regles } = await appelApi("/pilotage/regles");
+      regles.forEach((regle) => {
+        const option = document.createElement("option");
+        option.value = regle.signal;
+        option.textContent = libelleSignal(regle.signal);
+        select.appendChild(option);
+      });
+    }
+
     async function chargerJournal() {
       const zoneErreur = document.getElementById("zone-erreur");
       zoneErreur.innerHTML = "";
@@ -83,7 +90,7 @@
     }
 
     document.getElementById("filtre-signal").addEventListener("change", chargerJournal);
-    chargerJournal();
+    chargerOptionsSignal().then(chargerJournal);
   </script>
 </body>
 </html>
