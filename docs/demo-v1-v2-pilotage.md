@@ -252,20 +252,29 @@ journal. »
 **Faire** : onglet « Actions » du client web (bouton « Promouvoir », palier
 50 %), ou requête Bruno **8. Pilotage — promotion**.
 
-**Deux issues possibles, les deux sont pédagogiques** :
+**Issue attendue en démo : 409**, avec le motif exact dans la réponse —
+en pratique « pas assez de mesures sur la fenêtre (10 min. par version) ».
+La promotion exige au moins **10 mesures par version sur les 2 dernières
+minutes** (`ops/serveur_pilotage.py:80-81`) ; avec un canary à 20 %, il
+faudrait ~50 requêtes gateway en moins de 2 minutes pour réunir 10
+mesures v2 — hors de portée en cliquant sur « Send ». Observé en
+répétition (2026-09-25) : 2 mesures v2 en 12 minutes de canary.
 
-- **200** : la v2 est promue à 50 % — le critère (contraintes client + v2
-  jamais moins bonne + strictement meilleure sur au moins un signal) est
-  tenu.
-- **409** : refusé, avec le motif exact dans la réponse (ex. pas assez de
-  mesures sur la fenêtre, ou un signal où v2 n'est pas meilleure). **Dire** :
-  « C'est voulu — le système refuse de promouvoir sans preuve, même si on
-  clique. »
+**Dire** : « C'est voulu — le système refuse de promouvoir sans preuve,
+même si on clique. Il lui faut des mesures en nombre suffisant sur une
+fenêtre récente, et une v2 au moins aussi bonne que v1 partout,
+strictement meilleure sur au moins un signal. »
+
+L'autre issue, **200** (v2 promue à 50 %), suppose ce volume de trafic et
+des critères tenus : non répétée, donc hors script (voir « Pour aller plus
+loin »).
 
 ## 9. Rollback immédiat
 
 **Faire** : onglet « Actions » (bouton « Rollback immédiat »), ou requête
-Bruno **9. Pilotage — rollback**.
+Bruno **9. Pilotage — rollback**. **Un seul clic** : un rollback sans
+canary en cours ne change rien, mais il est quand même tracé au journal
+(observé en répétition : trois lignes « rollback » identiques en trop).
 
 **Montrer** : rejouer **4. Gateway — état** — `canary: null`, 100 % du
 trafic repasse sur la version saine, sans redémarrage.
@@ -284,10 +293,17 @@ production. »
 **Faire** : onglet « Journal » du client web, ou requête Bruno
 **10. Pilotage — journal**.
 
-**Montrer** : la séquence complète de la démo — canary, promotion (ou
-refus), rollback — chacune avec date, signal, déclencheur (auto/humain).
+**Montrer** : chaque changement d'état de la démo — déploiement du
+canary, rollback, ajustement de seuil (et promotion si elle a abouti) —
+avec date, signal, déclencheur (auto/humain).
 
-**Dire** : « Qui, quand, pourquoi — pour chaque décision, humaine ou
+Attention : un **refus** de promotion (409) n'est **pas** tracé — le
+serveur répond avant d'écrire au journal (`ops/serveur_pilotage.py:282-298`).
+Ne pas annoncer « le refus de tout à l'heure » avant d'ouvrir le journal.
+Si la question vient : « Le journal trace les décisions qui changent
+l'état ; tracer aussi les refus est une amélioration identifiée. »
+
+**Dire** : « Qui, quand, pourquoi — pour chaque changement, humain ou
 automatique. C'est ce document qu'on relit à 3 h du matin si ça dérive »
 (clin d'œil à `docs/exploitation.md`).
 
@@ -301,6 +317,20 @@ automatique. C'est ce document qu'on relit à 3 h du matin si ça dérive »
   503.
 
 ## Pour aller plus loin (hors script, si le temps le permet)
+
+- **Promotion réussie (200)** — non répétée : déployer un canary (étape
+  4), puis générer du trafic sur la gateway via Caddy pendant au moins
+  2 minutes :
+
+  ```bash
+  uv run python scripts/traffic_sim.py --mode normal --duree 90 --rps 1 \
+    --courts-seulement --url http://localhost:8090
+  ```
+
+  puis rejouer la requête 8 avant la fin. Avec `MOCK=off`, ~90 appels
+  facturés (ordre de grandeur : 1 €, non mesuré). Rien ne garantit un
+  200 : v2 fait plusieurs appels LLM par contrat, donc peut être plus
+  lente ou plus chère que v1 et échouer au critère « jamais moins bonne ».
 
 - **Dérive automatique** : `make traffic MODE=derive-score` (nécessite
   `MOCK=off`) fait chuter les scores en production ; `ops.deploy.surveiller`

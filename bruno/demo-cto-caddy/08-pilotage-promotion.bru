@@ -24,5 +24,8 @@ body:json {
 docs {
   200 si la v2 respecte les contraintes client ET n'est jamais moins bonne
   que v1 ET strictement meilleure sur au moins un signal ; 409 sinon, avec
-  les motifs (normal si l'étape 5 n'a pas encore généré assez de trafic).
+  les motifs. En démo, 409 attendu : il faut au moins 10 mesures par
+  version sur les 2 dernières minutes (FENETRE_CANARY_S,
+  MINIMUM_MESURES_CANARY), soit ~50 requêtes gateway avec un canary à
+  20 %. Un refus n'est pas tracé au journal.
 }
