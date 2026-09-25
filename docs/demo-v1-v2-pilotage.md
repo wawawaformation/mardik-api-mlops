@@ -85,16 +85,49 @@ le projet, et la raison de la note du CTO : plus jamais ça. »
   section par section ;
 - `appels_llm` : un appel par section, aucune perte ;
 - `confiance_globale` : un score composite (confiance du modèle ×
-  stabilité entre sections) — absent de v1. **Piège connu** : ce score
-  tombe à 0 dès qu'une clause n'est vue que dans une seule section — donc
-  un contrat bien rédigé où chaque clause n'apparaît qu'une fois peut
-  légitimement afficher `0.0`. C'est documenté comme biais assumé dans
-  `app/pipeline/confiance.py` (calibration prévue au chantier 2), pas une
-  panne — si la question vient, la réponse est prête ;
+  corroboration entre sections) — absent de v1. **Attendu à `0.0`** sur
+  ce contrat, voir l'encadré ci-dessous ;
 - `cout_eur` et `latence_ms` : à comparer aux contraintes client (coût
   < 0,15 €, P95 < 8 s) ;
 - la liste de `clauses` : comparer avec celle de l'étape 2 — les clauses
   de la fin du contrat n'y étaient pas.
+
+> **Pourquoi `confiance_globale` vaut 0 — biais connu, non calibré.**
+> Formule actuelle (`app/pipeline/confiance.py:46-50`) :
+>
+> ```text
+> corroboration = min(1, (nb_sections_où_la_clause_est_vue - 1) / 2)
+> confiance     = confiance_llm × corroboration
+> global        = min(confiance de toutes les clauses)
+> ```
+>
+> Sur la requête 3 (13 sections, 11 clauses) :
+>
+> | Vue dans     | Corroboration | Clauses                                                   |
+> | ------------ | ------------- | --------------------------------------------------------- |
+> | 1 section    | 0             | 9 clauses : reconduction, prix, force majeure, etc.       |
+> | 2 sections   | 0,5           | résiliation (0,99 × 0,5 = 0,495)                          |
+> | ≥ 3 sections | 1             | durée (0,99)                                              |
+>
+> Une seule clause à 0 suffit à mettre le global à 0 : sur un contrat bien
+> rédigé, où chaque clause n'apparaît qu'une fois, le score est donc
+> presque toujours nul — et l'alerte « score faible » du tableau de bord
+> (étape 6) passe au rouge.
+>
+> Plus gênant : la formule récompense la **répétition**, pas la justesse.
+> « durée » obtient 0,99 parce que le modèle l'étiquette dans 6 sections
+> (sur-détection plutôt que preuve), tandis que « données personnelles »,
+> dont l'extrait (« Les parties s'informent mutuellement de tout changement
+> d'adresse… ») ne correspond pas du tout au type, n'est à 0 que par
+> hasard — comme n'importe quelle clause vue une fois.
+>
+> **Dire**, si la question vient : « Le mécanisme est en place de bout en
+> bout — calcul, exposition dans l'API, alerte au tableau de bord, règle
+> de rollback. La formule, elle, n'est pas encore calibrée : elle pénalise
+> les clauses citées une seule fois, ce qui est le cas normal. C'est le
+> prochain chantier ; on ne la change pas à chaud, parce qu'elle pilote
+> la règle de rollback `score_faible`, et que toucher à `app/pipeline/`
+> relance l'évaluation payante (`alerte-eval.yml`). »
 
 **Dire** : « Même document, deux versions. À gauche une analyse partielle
 qui ne le dit pas, à droite le contrat entier avec un score de confiance —
