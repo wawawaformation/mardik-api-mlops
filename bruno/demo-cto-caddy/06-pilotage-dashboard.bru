@@ -1,0 +1,29 @@
+meta {
+  name: 6. Pilotage — tableau de bord
+  type: http
+  seq: 6
+}
+
+get {
+  url: http://localhost:8090/pilotage/dashboard
+  body: none
+  auth: none
+}
+
+docs {
+  Trafic v1/v2, latence P95, coût moyen, taux d'erreur, proportion de
+  scores de confiance faibles — le même écran que client_web/index.html
+  (http://localhost:8090/), en JSON brut pour montrer que le client web ne
+  fait qu'afficher cette API.
+
+  Deux pièges à connaître avant de la montrer :
+  - `fenetre.taille_requetes` est en secondes (300 = 5 min), pas un nombre
+    de requêtes : si rien n'a tourné dans les 5 dernières minutes,
+    `trafic` retombe à 0 %/0 % — pas un bug, juste une fenêtre vide.
+  - `distribution_score.proportion_score_faible` peut afficher 100 % sur
+    un tout petit échantillon (ex. une seule requête v2 récente) : le
+    score composite (`app/pipeline/confiance.py`) tombe à 0 dès qu'une
+    clause n'est vue que dans une seule section — biais connu, assumé,
+    calibration prévue au chantier 2. Ne pas être pris de court si le CTO
+    demande pourquoi c'est rouge.
+}

@@ -1,0 +1,18 @@
+meta {
+  name: 7. Pilotage — règles (signal × seuil × rétroaction)
+  type: http
+  seq: 7
+}
+
+get {
+  url: http://localhost:8090/pilotage/regles
+  body: none
+  auth: none
+}
+
+docs {
+  Les 4 signaux pilotés (latence_p95, taux_erreur, score_faible, canary),
+  leur seuil, la rétroaction déclenchée et qui déclenche (auto/humain).
+  Ajustables via PUT /pilotage/regles/{signal} — c'est ce que fait le bouton
+  « Modifier » de client_web/pilotage.html.
+}

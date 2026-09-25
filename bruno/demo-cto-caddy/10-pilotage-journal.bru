@@ -1,0 +1,17 @@
+meta {
+  name: 10. Pilotage — journal (historique des décisions)
+  type: http
+  seq: 10
+}
+
+get {
+  url: http://localhost:8090/pilotage/journal
+  body: none
+  auth: none
+}
+
+docs {
+  Chaque décision de la démo (canary, promotion ou rollback) apparaît ici
+  avec l'horodatage, le signal, le déclencheur (auto/humain) et les versions
+  avant/après — « qui, quand, pourquoi ». Filtrer avec ?signal=canary.
+}

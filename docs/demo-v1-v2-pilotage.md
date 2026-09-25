@@ -1,9 +1,15 @@
 # Script de démo — v1 → v2 → pilotage
 
 > Déroulé à suivre en présentant en direct. Les requêtes HTTP sont dans la
-> collection Bruno `bruno/mardik-demo-cto/` (URLs en dur, `localhost`,
-> aucun environnement à sélectionner) — chaque étape ci-dessous renvoie au
+> collection Bruno `bruno/demo-cto-caddy/` (URLs en dur sur
+> `http://localhost:8090`, le point d'entrée unique Caddy — aucun
+> environnement à sélectionner) — chaque étape ci-dessous renvoie au
 > numéro de requête correspondant. Durée indicative : 12–15 minutes.
+>
+> Une collection jumelle, `bruno/mardik-demo-cto/`, existe sur les ports
+> directs (8000/8001/8002) sans passer par Caddy — utile en dépannage si
+> Caddy pose problème en direct, mais pas le chemin de démo recommandé :
+> il ne montre pas le point d'entrée unique que Caddy est censé apporter.
 
 ## Avant de commencer
 
@@ -15,9 +21,9 @@ Vérifier `.env` : `MOCK=off` signifie que **chaque appel v1/v2/gateway fait
 un vrai appel LLM facturé** (Azure). C'est voulu pour une démo réelle, mais
 à savoir avant de lancer.
 
-Dans Bruno : ouvrir la collection `bruno/mardik-demo-cto/`. Ouvrir aussi
-`http://localhost:8503` (client web de pilotage) dans un onglet à côté —
-certaines étapes s'y regardent plutôt que dans Bruno.
+Dans Bruno : ouvrir la collection `bruno/demo-cto-caddy/`. Ouvrir aussi
+`http://localhost:8090/` (client web de pilotage, servi par Caddy) dans un
+onglet à côté — certaines étapes s'y regardent plutôt que dans Bruno.
 
 **Vérifier l'état de départ** (sinon la démo raconte n'importe quoi) :
 
@@ -53,8 +59,10 @@ de ~64 000 caractères.
 **Montrer** : **`tronque: true`**. Et pourtant, la liste de `clauses` a
 l'air parfaitement normale.
 
-**Variante encore plus parlante** — la requête fournie avec le squelette,
-`bruno/v1/analyse-contrat-long-troncature.bru` : son texte place
+**Variante encore plus parlante** — requête Bruno **2b. v1 — démo
+troncature** (`bruno/demo-cto-caddy/02b-v1-contrat-troncature.bru`,
+copie via Caddy de `bruno/v1/analyse-contrat-long-troncature.bru`) : son
+texte place
 délibérément les clauses **résiliation** et **droit applicable** tout à la
 fin, après 65 articles de remplissage. La troncature les fait donc
 littéralement **disparaître** de la réponse. On ne montre plus un booléen,
@@ -77,7 +85,12 @@ le projet, et la raison de la note du CTO : plus jamais ça. »
   section par section ;
 - `appels_llm` : un appel par section, aucune perte ;
 - `confiance_globale` : un score composite (confiance du modèle ×
-  stabilité entre sections) — absent de v1 ;
+  stabilité entre sections) — absent de v1. **Piège connu** : ce score
+  tombe à 0 dès qu'une clause n'est vue que dans une seule section — donc
+  un contrat bien rédigé où chaque clause n'apparaît qu'une fois peut
+  légitimement afficher `0.0`. C'est documenté comme biais assumé dans
+  `app/pipeline/confiance.py` (calibration prévue au chantier 2), pas une
+  panne — si la question vient, la réponse est prête ;
 - `cout_eur` et `latence_ms` : à comparer aux contraintes client (coût
   < 0,15 €, P95 < 8 s) ;
 - la liste de `clauses` : comparer avec celle de l'étape 2 — les clauses
@@ -92,7 +105,7 @@ Bruno — `c10.txt` et `c12.txt` sont encore plus longs) :
 
 ```bash
 jq -Rs '{texte: .}' eval/contrats/c12.txt | \
-  curl -s -X POST http://localhost:8001/v2/analyse \
+  curl -s -X POST http://localhost:8090/v2/analyse \
     -H "Content-Type: application/json" -d @- | jq
 ```
 
@@ -142,11 +155,17 @@ ses promesses. »
 
 ## 6. Le tableau de bord de pilotage
 
-**Faire** : ouvrir `http://localhost:8503` (tableau de bord) — ou requête
-Bruno **6. Pilotage — tableau de bord** pour voir le JSON brut derrière.
+**Faire** : ouvrir `http://localhost:8090/` (tableau de bord, servi par
+Caddy) — ou requête Bruno **6. Pilotage — tableau de bord** pour voir le
+JSON brut derrière.
 
 **Montrer** : latence P95, coût moyen, taux d'erreur, répartition v1/v2,
 et la distribution du score de confiance (proportion de scores faibles).
+La note sous le titre le rappelle : ce sont des valeurs **en temps réel
+sur une fenêtre glissante de 5 minutes**, pas un historique complet — si
+la démo marque une pause de plus de 5 minutes entre deux requêtes et
+cette étape, l'écran affiche `0 %/0 %`, ce n'est pas une panne. Rejouer
+une requête `/v1` ou `/v2` juste avant de montrer cet écran si besoin.
 
 **Dire** : « C'est le même écran que le client verrait en observabilité —
 et c'est cette même API que consulte le mécanisme de décision automatique

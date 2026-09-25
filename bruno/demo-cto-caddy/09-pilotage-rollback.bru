@@ -1,0 +1,29 @@
+meta {
+  name: 9. Pilotage — rollback immédiat
+  type: http
+  seq: 9
+}
+
+post {
+  url: http://localhost:8090/pilotage/rollback
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "declencheur": "humain"
+  }
+}
+
+docs {
+  Retour à v1 à 100 % en une opération, sans redémarrage — rejouer la
+  requête 4 juste après pour vérifier `canary: null`. Attention : après ce
+  rollback, c'est de nouveau v1 qui sert tout le trafic, donc la requête 5
+  redonne des réponses tronquées sur les contrats longs. C'est le résultat
+  attendu, pas une panne.
+}

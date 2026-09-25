@@ -1,0 +1,17 @@
+meta {
+  name: 4. Gateway — état courant
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:8090/gateway/etat
+  body: none
+  auth: none
+}
+
+docs {
+  {"active": "v1.0.0", "canary": null, "canary_percent": 0} avant tout
+  déploiement. À rejouer après l'étape terminal « déployer un canary » du
+  script de démo, pour montrer le changement sans redémarrage.
+}
