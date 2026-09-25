@@ -53,8 +53,8 @@ poussés, PR vers `dev` toujours à ouvrir.
   trafic part sur v2 (« tout part sur v1 » sur quelques requêtes) ; une
   promotion à 50 % serait restée sans effet. La variable ne garde plus
   qu'un sens (valeur par défaut de `ops.deploy.deployer_canary`). Test de
-  régression déterministe ajouté (`tests/unit/test_gateway.py`, canary 100 %
-  + `CANARY_PERCENT=0`) ; vérifié sur la stack : 19,9 % sur 100 000 tirages
+  régression déterministe ajouté (`tests/unit/test_gateway.py`, canary à
+  100 % et `CANARY_PERCENT=0`) ; vérifié sur la stack : 19,9 % sur 100 000 tirages
   dans le container reconstruit.
 - **Nettoyage** : `app/pipeline/Achtung` supprimé (déclencheur du test CI).
   Au prochain push, relance `alerte-eval.yml` (évaluation payante).
