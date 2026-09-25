@@ -66,7 +66,10 @@ texte place
 délibérément les clauses **résiliation** et **droit applicable** tout à la
 fin, après 65 articles de remplissage. La troncature les fait donc
 littéralement **disparaître** de la réponse. On ne montre plus un booléen,
-on montre des clauses qui s'évaporent.
+on montre des clauses qui s'évaporent. Observé en répétition (2026-09-25) :
+v1 renvoie seulement `["durée"]`, une clause qui n'existe même pas dans ce
+texte de remplissage — v1 perd les vraies clauses *et* en invente une.
+C'est ce texte que reprend la requête 3, pour comparer à l'identique.
 
 **Dire** : « v1 a coupé le contrat à 16 000 caractères *avant même*
 d'appeler le LLM — les trois quarts du document n'ont jamais été analysés.
@@ -77,20 +80,24 @@ le projet, et la raison de la note du CTO : plus jamais ça. »
 
 ## 3. v2 — le même contrat, sans troncature
 
-**Faire** : requête Bruno **3. v2 — LE MÊME contrat long**.
+**Faire** : requête Bruno **3. v2 — LE MÊME contrat que 2b** (texte
+strictement identique à la requête 2b, envoyé à `/v2/analyse`).
 
 **Montrer**, dans la réponse :
 
-- `sections` : le nombre d'articles découpés — v2 traite **tout** le texte,
-  section par section ;
+- la liste de `clauses` d'abord : **résiliation** et **droit applicable**
+  réapparaissent, et la « durée » inventée par v1 a disparu (observé en
+  répétition) ;
+- `sections` : le nombre de sections traitées — v2 découpe par articles
+  puis regroupe les articles consécutifs jusqu'à 6 000 caractères
+  (`app/pipeline/decoupage.py`), d'où 3 sections pour 67 articles ; v2
+  traite **tout** le texte, section par section ;
 - `appels_llm` : un appel par section, aucune perte ;
 - `confiance_globale` : un score composite (confiance du modèle ×
   corroboration entre sections) — absent de v1. **Attendu à `0.0`** sur
   ce contrat, voir l'encadré ci-dessous ;
 - `cout_eur` et `latence_ms` : à comparer aux contraintes client (coût
-  < 0,15 €, P95 < 8 s) ;
-- la liste de `clauses` : comparer avec celle de l'étape 2 — les clauses
-  de la fin du contrat n'y étaient pas.
+  < 0,15 €, P95 < 8 s) — observé : ~0,02 €, ~1 s.
 
 > **Pourquoi `confiance_globale` vaut 0 — biais connu, non calibré.**
 > Formule actuelle (`app/pipeline/confiance.py:46-50`) :
@@ -101,7 +108,12 @@ le projet, et la raison de la note du CTO : plus jamais ça. »
 > global        = min(confiance de toutes les clauses)
 > ```
 >
-> Sur la requête 3 (13 sections, 11 clauses) :
+> Sur la requête 3 (3 sections, 2 clauses) : résiliation et droit
+> applicable sont toutes deux vues dans la seule section 2 — corroboration
+> 0, donc confiance 0 pour chacune et global à 0.
+>
+> Même constat sur un contrat réaliste (texte de la requête 2 envoyé à v2 :
+> 13 sections, 11 clauses) :
 >
 > | Vue dans     | Corroboration | Clauses                                                   |
 > | ------------ | ------------- | --------------------------------------------------------- |
