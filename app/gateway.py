@@ -14,8 +14,9 @@ Contrat attendu :
 Règles :
 * la gateway lit ``ops/registry/index.json`` (via ``Registry``) à **chaque**
   requête : une promotion ou un rollback doit prendre effet sans redémarrage ;
-* ``CANARY_PERCENT`` dans ``.env`` force le pourcentage (sinon celui de
-  l'index) — pratique pour la démo ;
+* le pourcentage vient **uniquement** de l'index. ``CANARY_PERCENT`` n'est
+  que la valeur par défaut de ``ops.deploy.deployer_canary`` : s'il forçait
+  aussi le routage, une promotion à 50 % resterait sans effet ;
 * le bundle de chaque version vient du registre (``registry.bundle(version)``),
   pas de ``models/`` : on sert ce qui a été livré, pas ce qui est en chantier ;
 * la stratégie du bundle décide du moteur : ``monolithique`` → ``analyser_v1``,
@@ -24,7 +25,6 @@ Règles :
 """
 from __future__ import annotations
 
-import os
 import random
 
 from fastapi import APIRouter, Depends, HTTPException, Response
@@ -75,9 +75,6 @@ def analyse(
 ):
     active = registry.active()
     canary, canary_percent = registry.canary()
-    canary_percent_force = os.environ.get("CANARY_PERCENT")
-    if canary_percent_force:
-        canary_percent = int(canary_percent_force)
 
     version = choisir_version(active, canary, canary_percent, random.uniform(0, 100))
     bundle = registry.bundle(version)

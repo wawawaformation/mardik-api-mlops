@@ -46,6 +46,16 @@ poussés, PR vers `dev` toujours à ouvrir.
   journal lus depuis `/pilotage/regles` au lieu d'être codés en dur ;
   boutons « Rafraîchir » / « Auto : 30 s » retirés ; note « fenêtre
   glissante de 5 minutes » sous le titre, durée lue dans l'API.
+- **Correctif gateway — le canary ignorait son pourcentage** : `app/gateway.py`
+  laissait `CANARY_PERCENT` (défini à 10 dans `.env`, chargé dans le
+  container `app`) écraser le pourcentage de `index.json`. Symptôme : canary
+  déployé à 20 %, `/gateway/etat` affiche 20 %, mais 10 % seulement du
+  trafic part sur v2 (« tout part sur v1 » sur quelques requêtes) ; une
+  promotion à 50 % serait restée sans effet. La variable ne garde plus
+  qu'un sens (valeur par défaut de `ops.deploy.deployer_canary`). Test de
+  régression déterministe ajouté (`tests/unit/test_gateway.py`, canary 100 %
+  + `CANARY_PERCENT=0`) ; vérifié sur la stack : 19,9 % sur 100 000 tirages
+  dans le container reconstruit.
 - **Nettoyage** : `app/pipeline/Achtung` supprimé (déclencheur du test CI).
   Au prochain push, relance `alerte-eval.yml` (évaluation payante).
 - **Constats, reportés dans `TODO.md`** :

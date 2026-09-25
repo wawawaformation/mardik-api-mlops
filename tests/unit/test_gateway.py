@@ -48,3 +48,15 @@ def test_etat_reflete_un_canary_deploye(registry):
     app.dependency_overrides[get_registry] = lambda: registry
     r = TestClient(app).get("/gateway/etat")
     assert r.json()["canary"] == "v2.0.0"
+
+
+def test_analyse_suit_le_pourcentage_du_registre_malgre_canary_percent(client, registry, monkeypatch):
+    """CANARY_PERCENT est la valeur par défaut du déploiement, pas un forçage du routage."""
+    from app.llm_client import Bundle
+
+    registry.etiqueter("v2.0.0", Bundle.charger("v2"), commit="abc1234", note_eval=0.9)
+    registry.definir_canary("v2.0.0", 100)
+    monkeypatch.setenv("CANARY_PERCENT", "0")
+    texte = "Le présent contrat est soumis au droit français."
+    versions = {client.post("/analyse", json={"texte": texte}).headers["x-mardik-version"] for _ in range(5)}
+    assert versions == {"v2.0.0"}
