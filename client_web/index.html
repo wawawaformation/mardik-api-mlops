@@ -21,6 +21,7 @@
     <div class="page-header">
       <h1>Tableau de bord</h1>
     </div>
+    <p class="chart__note" id="note-fenetre">Valeurs en temps réel, calculées sur une fenêtre glissante.</p>
 
     <div id="zone-erreur"></div>
 
@@ -97,6 +98,10 @@
     }
 
     function afficherDashboard(d, regles) {
+      const fenetreMin = d.fenetre.taille_requetes / 60;
+      document.getElementById("note-fenetre").textContent =
+        `Valeurs en temps réel, calculées sur les ${fenetreMin} dernières minutes.`;
+
       const seuilLatenceS = extraireSeuilNumerique(regles.latence_p95.seuil);
       const seuilErreurPct = extraireSeuilNumerique(regles.taux_erreur.seuil);
 
