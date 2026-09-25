@@ -133,6 +133,21 @@ strictement identique à la requête 2b, envoyé à `/v2/analyse`).
 > d'adresse… ») ne correspond pas du tout au type, n'est à 0 que par
 > hasard — comme n'importe quelle clause vue une fois.
 >
+> **Faire, pour le prouver** : requête Bruno **3b. v2 — mêmes clauses,
+> répétées dans 3 chapitres**. Même contenu juridique que la 3 (résiliation
+> et droit applicable), mais repris dans trois chapitres — conditions
+> générales, conditions particulières, annexe de niveau de service — qui
+> font chacun une section v2. Observé en répétition (2026-09-25) :
+>
+> | Requête | Sections où chaque clause est vue | Confiance par clause | `confiance_globale` |
+> | ------- | --------------------------------- | -------------------- | ------------------- |
+> | 3       | 1 (section 2)                     | 0                    | 0                   |
+> | 3b      | 3 (sections 0, 1, 2)              | 0,99                 | 0,99                |
+>
+> Rien n'a changé dans la justesse de l'analyse, seulement la répétition :
+> c'est la démonstration directe que la formule mesure la répétition, pas
+> la justesse.
+>
 > **Dire**, si la question vient : « Le mécanisme est en place de bout en
 > bout — calcul, exposition dans l'API, alerte au tableau de bord, règle
 > de rollback. La formule, elle, n'est pas encore calibrée : elle pénalise
