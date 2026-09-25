@@ -306,6 +306,45 @@ Plan exécuté le 2026-09-23 sur `feature/chaine-llmops-intents` :
       (port direct) : passer `--url http://localhost:8090` pour passer par
       Caddy.
 
+## Release — pour plus tard (note du 2026-09-25)
+
+**Constat** : chaque run de `cd-main.yml` crée bien une version SemVer
+(`prochaine_version()` : patch automatique, `[minor]` / `[major]` via le
+message du commit), l'enregistre dans `ops/registry/vX.Y.Z/` (commit
+`chore(registry)` sur `main`) et pousse l'image `ghcr.io/…:vX.Y.Z` — déjà
+v2.0.0 à v2.0.4. Mais il n'existe **aucune release au sens git / GitHub** :
+ni tag git `vX.Y.Z`, ni GitHub Release, ni notes de version. Le ruleset
+`protection-tags-preuves` protège pourtant déjà les tags `v*`… que rien ne
+crée. Aujourd'hui, retrouver le commit d'une version impose d'ouvrir son
+manifeste (`code_commit`) dans `ops/registry/vX.Y.Z/`.
+
+- [ ] **Poser le tag git `vX.Y.Z`** dans `cd-main.yml`, après le push de
+      l'image. À trancher : sur le SHA qui porte `revue-ok` / `eval-ok`
+      (celui qui a été relu et évalué) ou sur le commit `chore(registry)`
+      qui le suit ? Le premier semble plus juste. Sans risque de boucle :
+      un push de tag `v*` ne déclenche aucun workflow (`ci.yml` ignore les
+      tags, `gate.yml` n'écoute que `gate/*`, `cd-main.yml` que la branche
+      `main`). `GITHUB_TOKEN` et `contents: write` suffisent, déjà en place.
+- [ ] **Créer une GitHub Release** (`gh release create vX.Y.Z`) avec : note
+      d'évaluation, fingerprint du manifeste, référence de l'image `ghcr.io`,
+      pourcentage canary. Notes générées (`--generate-notes`) ou tirées du
+      `CHANGELOG.md` ?
+- [ ] **Trancher le moment de la release** : `versionnage.md` dit que chaque
+      `vX.Y.Z` pointe vers une image déployable, pas qu'elle est en
+      production. Piste : release **pré-publiée** (`--prerelease`) au
+      déploiement canary 10 %, passée en release finale à la promotion à
+      100 % (depuis `serveur_pilotage`, donc hors `cd-main.yml`).
+- [ ] **Cas particuliers** : `v1.0.0` (lignée v1 figée, antérieure à la
+      chaîne) sans tag ni release — la rattraper à la main ou l'assumer ;
+      le tag étant immuable (ruleset), un run relancé sur la même version
+      doit détecter le tag existant au lieu d'échouer (même garde que pour
+      `revue-ok` / `eval-ok`).
+
+Références : `conception_figee/chantier1_llmops/versionnage.md` (règles
+SemVer et fingerprint), `ops/deploy.py::prochaine_version`,
+`.github/workflows/cd-main.yml` (étapes « Calculer la prochaine version » à
+« Pousser l'image »).
+
 ## Infrastructure GitHub — Prérequis pour la chaîne
 
 - [x] Ruleset `main-linear` créé : **Require linear history** sur `main` (2026-09-24)
