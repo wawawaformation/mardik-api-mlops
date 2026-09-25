@@ -1,0 +1,35 @@
+meta {
+  name: 6. Gateway — analyse, dispatch v1/v2 décidé par Caddy+app
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8090/analyse
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "texte": "Le présent contrat est conclu pour une durée de 12 mois, renouvelable par tacite reconduction sauf dénonciation avec un préavis de deux mois. En cas de résiliation anticipée pour faute grave, la partie défaillante s'expose à une pénalité de retard de 1 % par semaine sur les sommes dues. Le prix des prestations est fixé à 15 000 euros HT, payable à réception de facture. Les parties s'engagent à une stricte confidentialité sur les informations échangées. Le présent contrat est soumis au droit français, tout litige relève des tribunaux de Paris."
+  }
+}
+
+docs {
+  Différence avec 02/03 : ici on ne choisit pas la version, c'est le
+  gateway qui décide (dispatch canary), et Caddy qui route /analyse vers
+  app sans savoir laquelle des deux versions va répondre. Regarder
+  l'en-tête de réponse `X-Mardik-Version` : elle change d'une requête à
+  l'autre selon `canary_percent` (voir 04-gateway-etat).
+
+  Tant qu'aucun canary n'est déployé (`canary: null`, cas par défaut),
+  cette requête répond toujours en v1 — c'est attendu, pas un signe que
+  le dispatch est cassé. Pour voir un mélange v1/v2, déployer un canary
+  d'abord (étape 4 de docs/demo-v1-v2-pilotage.md), puis rejouer cette
+  requête plusieurs fois (bouton Send répété ou Bruno Runner).
+}
