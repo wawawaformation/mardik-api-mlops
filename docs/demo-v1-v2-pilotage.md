@@ -69,7 +69,7 @@ littéralement **disparaître** de la réponse. On ne montre plus un booléen,
 on montre des clauses qui s'évaporent. Observé en répétition (2026-09-25) :
 v1 renvoie seulement `["durée"]`, une clause qui n'existe même pas dans ce
 texte de remplissage — v1 perd les vraies clauses *et* en invente une.
-C'est ce texte que reprend la requête 3, pour comparer à l'identique.
+C'est ce texte que reprend la requête 3b, pour comparer à l'identique.
 
 **Dire** : « v1 a coupé le contrat à 16 000 caractères *avant même*
 d'appeler le LLM — les trois quarts du document n'ont jamais été analysés.
@@ -78,28 +78,36 @@ aucun moyen de savoir qu'il manque l'essentiel. Une clause de
 non-concurrence en page 30 ? Invisible. C'est ce défaut qui a motivé tout
 le projet, et la raison de la note du CTO : plus jamais ça. »
 
-## 3. v2 — le même contrat, sans troncature
+## 3. v2 — analyse complète, puis le même texte que 2b
 
-**Faire** : requête Bruno **3. v2 — LE MÊME contrat que 2b** (texte
-strictement identique à la requête 2b, envoyé à `/v2/analyse`).
+**Faire** : requête Bruno **3. v2 — clauses répétées dans 3 chapitres**.
+Un contrat où la résiliation et le droit applicable sont repris dans les
+conditions générales, les conditions particulières et une annexe de niveau
+de service — comme souvent dans la réalité.
 
 **Montrer**, dans la réponse :
 
-- la liste de `clauses` d'abord : **résiliation** et **droit applicable**
-  réapparaissent, et la « durée » inventée par v1 a disparu (observé en
-  répétition) ;
 - `sections` : le nombre de sections traitées — v2 découpe par articles
   puis regroupe les articles consécutifs jusqu'à 6 000 caractères
-  (`app/pipeline/decoupage.py`), d'où 3 sections pour 67 articles ; v2
-  traite **tout** le texte, section par section ;
+  (`app/pipeline/decoupage.py`) ; ici un chapitre = une section, soit 3 ;
+  v2 traite **tout** le texte, section par section ;
 - `appels_llm` : un appel par section, aucune perte ;
+- `clauses` : résiliation et droit applicable, chacune vue dans les
+  sections 0, 1 et 2 ;
 - `confiance_globale` : un score composite (confiance du modèle ×
-  corroboration entre sections) — absent de v1. **Attendu à `0.0`** sur
-  ce contrat, voir l'encadré ci-dessous ;
+  corroboration entre sections) — absent de v1. Ici **0,99** ;
 - `cout_eur` et `latence_ms` : à comparer aux contraintes client (coût
   < 0,15 €, P95 < 8 s) — observé : ~0,02 €, ~1 s.
 
-> **Pourquoi `confiance_globale` vaut 0 — biais connu, non calibré.**
+**Faire** : requête Bruno **3b. v2 — LE MÊME texte que 2b** (texte
+strictement identique à la requête 2b, envoyé à `/v2/analyse`).
+
+**Montrer** : la liste de `clauses` — **résiliation** et **droit
+applicable**, perdues par v1 en 2b, réapparaissent, et la « durée »
+inventée par v1 a disparu (observé en répétition). Puis `confiance_globale` :
+**0**, alors que les deux clauses sont justes et citées mot pour mot.
+
+> **Pourquoi `confiance_globale` vaut 0 en 3b — biais connu, non calibré.**
 > Formule actuelle (`app/pipeline/confiance.py:46-50`) :
 >
 > ```text
@@ -108,9 +116,16 @@ strictement identique à la requête 2b, envoyé à `/v2/analyse`).
 > global        = min(confiance de toutes les clauses)
 > ```
 >
-> Sur la requête 3 (3 sections, 2 clauses) : résiliation et droit
-> applicable sont toutes deux vues dans la seule section 2 — corroboration
-> 0, donc confiance 0 pour chacune et global à 0.
+> Les requêtes 3 et 3b portent les mêmes clauses ; seule la répétition
+> change. Observé en répétition (2026-09-25) :
+>
+> | Requête | Sections où chaque clause est vue | Confiance par clause | `confiance_globale` |
+> | ------- | --------------------------------- | -------------------- | ------------------- |
+> | 3       | 3 (sections 0, 1, 2)              | 0,99                 | 0,99                |
+> | 3b      | 1 (section 2)                     | 0                    | 0                   |
+>
+> Rien n'a changé dans la justesse de l'analyse : c'est la démonstration
+> directe que la formule mesure la **répétition**, pas la justesse.
 >
 > Même constat sur un contrat réaliste (texte de la requête 2 envoyé à v2 :
 > 13 sections, 11 clauses) :
@@ -124,41 +139,27 @@ strictement identique à la requête 2b, envoyé à `/v2/analyse`).
 > Une seule clause à 0 suffit à mettre le global à 0 : sur un contrat bien
 > rédigé, où chaque clause n'apparaît qu'une fois, le score est donc
 > presque toujours nul — et l'alerte « score faible » du tableau de bord
-> (étape 6) passe au rouge.
->
-> Plus gênant : la formule récompense la **répétition**, pas la justesse.
-> « durée » obtient 0,99 parce que le modèle l'étiquette dans 6 sections
-> (sur-détection plutôt que preuve), tandis que « données personnelles »,
-> dont l'extrait (« Les parties s'informent mutuellement de tout changement
-> d'adresse… ») ne correspond pas du tout au type, n'est à 0 que par
-> hasard — comme n'importe quelle clause vue une fois.
->
-> **Faire, pour le prouver** : requête Bruno **3b. v2 — mêmes clauses,
-> répétées dans 3 chapitres**. Même contenu juridique que la 3 (résiliation
-> et droit applicable), mais repris dans trois chapitres — conditions
-> générales, conditions particulières, annexe de niveau de service — qui
-> font chacun une section v2. Observé en répétition (2026-09-25) :
->
-> | Requête | Sections où chaque clause est vue | Confiance par clause | `confiance_globale` |
-> | ------- | --------------------------------- | -------------------- | ------------------- |
-> | 3       | 1 (section 2)                     | 0                    | 0                   |
-> | 3b      | 3 (sections 0, 1, 2)              | 0,99                 | 0,99                |
->
-> Rien n'a changé dans la justesse de l'analyse, seulement la répétition :
-> c'est la démonstration directe que la formule mesure la répétition, pas
-> la justesse.
+> (étape 6) passe au rouge. Pire, « durée » obtient 0,99 parce que le
+> modèle l'étiquette dans 6 sections (sur-détection plutôt que preuve),
+> tandis que « données personnelles », dont l'extrait (« Les parties
+> s'informent mutuellement de tout changement d'adresse… ») ne correspond
+> pas du tout au type, n'est à 0 que par hasard.
 >
 > **Dire**, si la question vient : « Le mécanisme est en place de bout en
 > bout — calcul, exposition dans l'API, alerte au tableau de bord, règle
 > de rollback. La formule, elle, n'est pas encore calibrée : elle pénalise
-> les clauses citées une seule fois, ce qui est le cas normal. C'est le
-> prochain chantier ; on ne la change pas à chaud, parce qu'elle pilote
-> la règle de rollback `score_faible`, et que toucher à `app/pipeline/`
-> relance l'évaluation payante (`alerte-eval.yml`). »
+> les clauses citées une seule fois, ce qui est le cas normal. La
+> correction est identifiée — vérifier que l'extrait cité figure bien
+> dans le contrat, ce qu'attrape une citation inventée sans pénaliser une
+> clause écrite une fois ; la fonction reçoit déjà le texte pour ça. On
+> ne la change pas à chaud : elle pilote la règle de rollback
+> `score_faible`, et toucher à `app/pipeline/` relance l'évaluation
+> payante (`alerte-eval.yml`). »
 
-**Dire** : « Même document, deux versions. À gauche une analyse partielle
-qui ne le dit pas, à droite le contrat entier avec un score de confiance —
-le juriste sait maintenant *quand* faire confiance au résultat. »
+**Dire** : « Même texte, deux versions (2b et 3b). À gauche une analyse
+partielle qui ne le dit pas et invente une clause, à droite le contrat
+entier, analysé section par section. Et le score de confiance, même
+imparfait, nous dit déjà où la mesure doit progresser. »
 
 **Variante terminal** (pour rejouer avec un autre contrat sans toucher à
 Bruno — `c10.txt` et `c12.txt` sont encore plus longs) :
