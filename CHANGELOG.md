@@ -23,6 +23,12 @@ poussés, PR vers `dev` toujours à ouvrir.
     `app/gateway.py` et `app/telemetry.py` (construction du singleton
     `Telemetry`, spans, logs, `MetricsStore.enregistrer()` / `lire()` et
     leurs lecteurs), avec le n° de ligne de chaque fonction.
+  - `docs/img/workflows-github-runs_reel.drawio` (+ `.png`, nouveau) : ce
+    que fait un run de chacun des 5 workflows GitHub, en langage simple
+    (déclencheur, coût, étapes, contrôles, résultat), et les relais par tag
+    entre `ci`, `revue`, `gate` et `cd-main`. Complète
+    `chaine-llmops-deux-tags_reel` (enchaînement détaillé) et
+    `cd-main-deroule_reel` (un seul workflow).
   - `docs/img/lecture-schema-flux-gateway-telemetry.md` (nouveau, à côté du schéma) : guide de
     lecture simple de ce schéma (code couleur, sens de lecture, numéros de
     ligne, exemple commenté pendant un canary).
