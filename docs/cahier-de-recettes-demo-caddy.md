@@ -33,9 +33,8 @@
 
 > Point d'attention : `client_web/app.js` utilise `API_BASE = ""` (relatif),
 > donc tous les appels API du client passent par Caddy (port 8090), pas par
-> `localhost:8002` en direct. *(Note : `docs/fiche-demo-caddy.md` affirme
-> encore l'inverse — passage à `API_BASE` relatif fait par le commit
-> `94939c9`, la fiche n'a pas été mise à jour sur ce point.)*
+> `localhost:8002` en direct (`docs/fiche-demo-caddy.md` corrigé en
+> conséquence).
 
 ---
 
@@ -103,6 +102,13 @@ Bruno (client externe simulé) et le client web passent par le **même**
 point d'entrée Caddy (port 8090).
 
 - [ ] Nouvelle entrée visible après rafraîchissement
+
+> Attention : `index.html` et `actions.html` affichent le trafic v1/v2 sur
+> une **fenêtre glissante de 5 minutes** (`FENETRE_DASHBOARD_S = 300`,
+> `ops/serveur_pilotage.py:79`), pas un historique complet. Si plus de
+> 5 minutes se sont écoulées depuis la dernière requête `/v1` ou `/v2`,
+> l'écran affiche `v1 à 0 %, v2 à 0 %` — ce n'est pas un bug. Toujours
+> rejouer les requêtes Bruno juste avant de montrer cette page.
 
 ---
 

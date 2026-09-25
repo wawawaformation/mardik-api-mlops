@@ -23,10 +23,10 @@ docker compose ps
 | `client_web` | 8503 | client HTML/JS de pilotage | non |
 | `proxy` / `azure-adapter` | 8080 / interne | proxy de dérive + adaptateur Azure | non (pas exposé côté client) |
 
-**Important** : `client_web` appelle `http://localhost:8002` en dur
-(`client_web/app.js:5`), donc directement `serveur_pilotage` — **pas**
-via Caddy. Caddy unifie l'accès à l'API, pas encore celui du client de
-pilotage (hors périmètre de cette étape).
+**Important** : `client_web` utilise `API_BASE = ""` (relatif,
+`client_web/app.js:8`), donc ses appels API passent par la même origine
+que la page — via Caddy si la page est servie sur le port 8090. Caddy
+unifie bien l'accès à l'API **et** au client de pilotage.
 
 ## 3. Montrer le routage Caddy (tout passe par le port 8090)
 
