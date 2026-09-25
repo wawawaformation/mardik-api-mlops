@@ -306,6 +306,13 @@ Plan exécuté le 2026-09-23 sur `feature/chaine-llmops-intents` :
       (port direct) : passer `--url http://localhost:8090` pour passer par
       Caddy.
 
+## À régler plus tard — notes rapides
+
+- [ ] **Régler Git Graph** (demande du 2026-09-25, problème à préciser).
+      État relevé ce jour-là : `dev`, `main` et leurs `origin/` alignés
+      (0 d'écart) ; seule `feature/demo-ci` est en avance de 31 commits non
+      poussés sur `origin/feature/demo-ci`.
+
 ## Release — pour plus tard (note du 2026-09-25)
 
 **Constat** : chaque run de `cd-main.yml` crée bien une version SemVer
