@@ -78,7 +78,7 @@
           <mxGeometry x="820" y="280" width="220" height="100" as="geometry" />
         </mxCell>
 
-        <mxCell id="n2" value="MOCK=on (réservé à la CI) : rejoue&#10;eval/fixtures/*.json (clé = empreinte&#10;du prompt), ou reconstruit une&#10;réponse déterministe par mots-clés&#10;si aucune fixture ne correspond.&#10;Sinon : appel réseau réel via&#10;ops/drift_proxy.py (transparent si&#10;DRIFT=off) vers Ollama ou Azure." style="shape=note;whiteSpace=wrap;html=1;size=12;fillColor=#F5F5F5;strokeColor=#666666;fontSize=10;align=left;spacing=6;" vertex="1" parent="1">
+        <mxCell id="n2" value="MOCK=on (réservé à la CI) : rejoue&#10;eval/fixtures/*.json (clé = empreinte&#10;du prompt), ou reconstruit une&#10;réponse déterministe par mots-clés&#10;si aucune fixture ne correspond.&#10;Sinon : appel réseau réel via&#10;ops/drift_proxy.py (transparent si&#10;DRIFT=off) vers Ollama ou un fournisseur LLM distant." style="shape=note;whiteSpace=wrap;html=1;size=12;fillColor=#F5F5F5;strokeColor=#666666;fontSize=10;align=left;spacing=6;" vertex="1" parent="1">
           <mxGeometry x="780" y="520" width="300" height="190" as="geometry" />
         </mxCell>
         <mxCell id="an2" style="edgeStyle=orthogonalEdgeStyle;html=1;endArrow=none;strokeColor=#82B366;strokeWidth=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="e2" target="n2">

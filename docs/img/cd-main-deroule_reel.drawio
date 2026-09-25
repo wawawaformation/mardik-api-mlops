@@ -34,7 +34,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="s4" value="Démarrer proxy + azure-adapter&#10;(.env écrit depuis les secrets Azure)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+        <mxCell id="s4" value="Démarrer proxy + adaptateur du fournisseur LLM&#10;(.env écrit depuis les secrets du fournisseur)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="280" y="380" width="300" height="60" as="geometry" />
         </mxCell>
         <mxCell id="es4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="s3" target="s4">

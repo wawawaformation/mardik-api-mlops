@@ -13,7 +13,7 @@
         </mxCell>
 
         <!-- lots, en haut -->
-        <mxCell id="lots" value="Les trois lots (intents.md) : chaque problème doit être attrapé au lot le moins cher capable de le voir&#10;LOT A (ci.yml, à gauche) — lint + TU + TI, mock, secondes, informe le développeur, ne prouve rien&#10;LOT B (revue.yml, à droite) — revue de code, attention humaine, prouve que le code a été relu ET que le lot A était vert&#10;LOT C (gate.yml, à droite) — tests mockés + évaluation réelle Azure, argent, seule preuve qui autorise la fusion vers main" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=10;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="lots" value="Les trois lots (intents.md) : chaque problème doit être attrapé au lot le moins cher capable de le voir&#10;LOT A (ci.yml, à gauche) — lint + TU + TI, mock, secondes, informe le développeur, ne prouve rien&#10;LOT B (revue.yml, à droite) — revue de code, attention humaine, prouve que le code a été relu ET que le lot A était vert&#10;LOT C (gate.yml, à droite) — tests mockés + évaluation réelle (vrai modèle), argent, seule preuve qui autorise la fusion vers main" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=10;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="80" y="65" width="1580" height="90" as="geometry" />
         </mxCell>
 
@@ -36,7 +36,7 @@
         <mxCell id="eal0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" parent="1" source="ci1" target="al1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="al2" value="alerte-eval.yml&#10;évaluation réelle (Azure), affichée&#10;dans le résumé de job" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+        <mxCell id="al2" value="alerte-eval.yml&#10;évaluation réelle (vrai modèle), affichée&#10;dans le résumé de job" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="650" y="345" width="290" height="60" as="geometry" />
         </mxCell>
         <mxCell id="eal1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;" edge="1" parent="1" source="al1" target="al2">
@@ -111,7 +111,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
-        <mxCell id="n6" value="gate.yml — LOT C&#10;job tests (mock, TA compris) → job evaluation&#10;(vrai modèle Azure, needs: tests)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+        <mxCell id="n6" value="gate.yml — LOT C&#10;job tests (mock, TA compris) → job evaluation&#10;(vrai modèle, needs: tests)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="980" y="815" width="320" height="70" as="geometry" />
         </mxCell>
         <mxCell id="e6" value="oui" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="n5" target="n6">
