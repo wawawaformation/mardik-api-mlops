@@ -20,10 +20,6 @@
   <main class="page">
     <div class="page-header">
       <h1>Tableau de bord</h1>
-      <div class="page-header__actions">
-        <button type="button" class="button button--secondary" id="bouton-rafraichir">Rafraîchir</button>
-        <button type="button" class="button button--secondary" id="bouton-auto" aria-pressed="false">Auto : 30 s</button>
-      </div>
     </div>
 
     <div id="zone-erreur"></div>
@@ -32,7 +28,7 @@
       <div class="card kpi">
         <p class="kpi__label">Latence P95</p>
         <p class="kpi__value" id="kpi-latence">—</p>
-        <p class="kpi__target">cible &lt; 8 s</p>
+        <p class="kpi__target" id="cible-latence">cible —</p>
         <p class="status" id="statut-latence"></p>
       </div>
 
@@ -46,7 +42,7 @@
       <div class="card kpi">
         <p class="kpi__label">Taux d'erreur</p>
         <p class="kpi__value" id="kpi-erreur">—</p>
-        <p class="kpi__target">seuil 10 %</p>
+        <p class="kpi__target" id="cible-erreur">seuil —</p>
         <p class="status" id="statut-erreur"></p>
       </div>
 
@@ -78,34 +74,48 @@
 
   <script src="app.js"></script>
   <script>
-    let minuteur = null;
+    // Extrait le premier nombre d'un texte de seuil renvoyé par /pilotage/regles
+    // (ex. "> 8 s" -> 8, "> 20 % de scores < 0,6" -> 20).
+    function extraireSeuilNumerique(texte) {
+      const trouve = texte.match(/-?\d+(?:[.,]\d+)?/);
+      return trouve ? parseFloat(trouve[0].replace(",", ".")) : null;
+    }
 
     async function chargerDashboard() {
       const zoneErreur = document.getElementById("zone-erreur");
       zoneErreur.innerHTML = "";
       try {
-        const d = await appelApi("/pilotage/dashboard");
-        afficherDashboard(d);
+        const [d, r] = await Promise.all([
+          appelApi("/pilotage/dashboard"),
+          appelApi("/pilotage/regles"),
+        ]);
+        const regles = Object.fromEntries(r.regles.map((regle) => [regle.signal, regle]));
+        afficherDashboard(d, regles);
       } catch (erreur) {
         afficherErreur(zoneErreur, erreur);
       }
     }
 
-    function afficherDashboard(d) {
+    function afficherDashboard(d, regles) {
+      const seuilLatenceS = extraireSeuilNumerique(regles.latence_p95.seuil);
+      const seuilErreurPct = extraireSeuilNumerique(regles.taux_erreur.seuil);
+
+      document.getElementById("cible-latence").textContent = `cible < ${seuilLatenceS} s`;
       document.getElementById("kpi-latence").textContent = formatSecondes(d.latence_p95_ms);
       const statutLatence = document.getElementById("statut-latence");
-      statutLatence.className = statutClasse(d.latence_p95_ms, 8000);
-      statutLatence.textContent = statutLibelle(d.latence_p95_ms, 8000);
+      statutLatence.className = statutClasse(d.latence_p95_ms, seuilLatenceS * 1000);
+      statutLatence.textContent = statutLibelle(d.latence_p95_ms, seuilLatenceS * 1000);
 
       document.getElementById("kpi-cout").textContent = formatEuros(d.cout_moyen_eur);
       const statutCout = document.getElementById("statut-cout");
       statutCout.className = statutClasse(d.cout_moyen_eur, 0.15);
       statutCout.textContent = statutLibelle(d.cout_moyen_eur, 0.15);
 
+      document.getElementById("cible-erreur").textContent = `seuil ${seuilErreurPct} %`;
       document.getElementById("kpi-erreur").textContent = formatPourcent(d.taux_erreur);
       const statutErreur = document.getElementById("statut-erreur");
-      statutErreur.className = statutClasse(d.taux_erreur, 0.10);
-      statutErreur.textContent = statutLibelle(d.taux_erreur, 0.10);
+      statutErreur.className = statutClasse(d.taux_erreur, seuilErreurPct / 100);
+      statutErreur.textContent = statutLibelle(d.taux_erreur, seuilErreurPct / 100);
 
       const chartTrafic = document.getElementById("chart-trafic");
       chartTrafic.innerHTML = ["v1", "v2"].map((v, i) => {
@@ -124,11 +134,12 @@
         <div class="chart__track"><div class="chart__bar" style="--ratio: ${proportion * 100}%"></div></div>
         <span class="chart__value">${formatPourcent(proportion)}</span>
       </li>`;
+      const seuilScoreFaiblePct = extraireSeuilNumerique(regles.score_faible.seuil);
       const alerteScore = document.getElementById("alerte-score");
-      if (proportion > 0.20) {
+      if (proportion * 100 > seuilScoreFaiblePct) {
         alerteScore.hidden = false;
         alerteScore.innerHTML =
-          `<span class="callout__label">Attention :</span> zone à risque — proportion des scores &lt; ${seuil} : ${formatPourcent(proportion)} (seuil 20 %).`;
+          `<span class="callout__label">Attention :</span> zone à risque — proportion des scores &lt; ${seuil} : ${formatPourcent(proportion)} (seuil ${seuilScoreFaiblePct} %).`;
       } else {
         alerteScore.hidden = true;
       }
@@ -139,21 +150,6 @@
           ).join("")
         : "<li>Aucun événement récent.</li>";
     }
-
-    document.getElementById("bouton-rafraichir").addEventListener("click", chargerDashboard);
-    document.getElementById("bouton-auto").addEventListener("click", (ev) => {
-      const actif = ev.target.getAttribute("aria-pressed") === "true";
-      if (actif) {
-        clearInterval(minuteur);
-        minuteur = null;
-        ev.target.setAttribute("aria-pressed", "false");
-        ev.target.textContent = "Auto : 30 s";
-      } else {
-        minuteur = setInterval(chargerDashboard, 30000);
-        ev.target.setAttribute("aria-pressed", "true");
-        ev.target.textContent = "Auto : activé";
-      }
-    });
 
     chargerDashboard();
   </script>
