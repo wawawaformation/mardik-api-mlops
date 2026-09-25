@@ -60,16 +60,16 @@ de ~64 000 caractères.
 l'air parfaitement normale.
 
 **Variante encore plus parlante** — requête Bruno **2b. v1 — démo
-troncature** (`bruno/demo-cto-caddy/02b-v1-contrat-troncature.bru`,
-copie via Caddy de `bruno/v1/analyse-contrat-long-troncature.bru`) : son
-texte place
-délibérément les clauses **résiliation** et **droit applicable** tout à la
-fin, après 65 articles de remplissage. La troncature les fait donc
-littéralement **disparaître** de la réponse. On ne montre plus un booléen,
-on montre des clauses qui s'évaporent. Observé en répétition (2026-09-25) :
-v1 renvoie seulement `["durée"]`, une clause qui n'existe même pas dans ce
-texte de remplissage — v1 perd les vraies clauses *et* en invente une.
-C'est ce texte que reprend la requête 3b, pour comparer à l'identique.
+troncature** (`bruno/demo-cto-caddy/02b-v1-contrat-troncature.bru`) : un
+contrat de ~31 700 caractères en six chapitres. Les chapitres 1 à 3
+reprennent la résiliation et le droit applicable ; les chapitres 4 à 6
+portent une clause de **non-concurrence** — placée au-delà des 16 000
+caractères que v1 envoie au modèle. Observé en répétition (2026-09-25) :
+`tronque: true`, résiliation et droit applicable trouvés, et la
+non-concurrence a littéralement **disparu**. On ne montre plus un
+booléen, on montre une clause qui s'évapore — et justement celle qu'un
+juriste ne veut surtout pas rater. C'est ce texte que reprend la
+requête 3, pour comparer à l'identique.
 
 **Dire** : « v1 a coupé le contrat à 16 000 caractères *avant même*
 d'appeler le LLM — les trois quarts du document n'ont jamais été analysés.
@@ -78,34 +78,35 @@ aucun moyen de savoir qu'il manque l'essentiel. Une clause de
 non-concurrence en page 30 ? Invisible. C'est ce défaut qui a motivé tout
 le projet, et la raison de la note du CTO : plus jamais ça. »
 
-## 3. v2 — analyse complète, puis le même texte que 2b
+## 3. v2 — le même contrat, sans troncature
 
-**Faire** : requête Bruno **3. v2 — clauses répétées dans 3 chapitres**.
-Un contrat où la résiliation et le droit applicable sont repris dans les
-conditions générales, les conditions particulières et une annexe de niveau
-de service — comme souvent dans la réalité.
+**Faire** : requête Bruno **3. v2 — LE MÊME texte que 2b** (texte
+strictement identique à la requête 2b, envoyé à `/v2/analyse`).
 
 **Montrer**, dans la réponse :
 
+- la liste de `clauses` d'abord : la **non-concurrence**, perdue par v1
+  en 2b, est là, à côté de la résiliation et du droit applicable ;
 - `sections` : le nombre de sections traitées — v2 découpe par articles
   puis regroupe les articles consécutifs jusqu'à 6 000 caractères
-  (`app/pipeline/decoupage.py`) ; ici un chapitre = une section, soit 3 ;
+  (`app/pipeline/decoupage.py`) ; ici un chapitre = une section, soit 6 ;
   v2 traite **tout** le texte, section par section ;
 - `appels_llm` : un appel par section, aucune perte ;
-- `clauses` : résiliation et droit applicable, chacune vue dans les
-  sections 0, 1 et 2 ;
 - `confiance_globale` : un score composite (confiance du modèle ×
-  corroboration entre sections) — absent de v1. Ici **0,99** ;
+  corroboration entre sections) — absent de v1. Ici **0,99** : chaque
+  clause est vue dans trois sections ;
 - `cout_eur` et `latence_ms` : à comparer aux contraintes client (coût
-  < 0,15 €, P95 < 8 s) — observé : ~0,02 €, ~1 s.
+  < 0,15 €, P95 < 8 s) — observé : ~0,03 €, ~1,3 s.
 
-**Faire** : requête Bruno **3b. v2 — LE MÊME texte que 2b** (texte
-strictement identique à la requête 2b, envoyé à `/v2/analyse`).
+**Faire** : requête Bruno **3b. v2 — clauses citées une seule fois**. 65
+articles de remplissage, puis une résiliation et un droit applicable
+écrits **une seule fois**, en fin de contrat.
 
-**Montrer** : la liste de `clauses` — **résiliation** et **droit
-applicable**, perdues par v1 en 2b, réapparaissent, et la « durée »
-inventée par v1 a disparu (observé en répétition). Puis `confiance_globale` :
-**0**, alors que les deux clauses sont justes et citées mot pour mot.
+**Montrer** : v2 trouve les deux clauses, justes et citées mot pour mot —
+et pourtant `confiance_globale` vaut **0**. (Selon les exécutions, une
+« durée » fantôme peut aussi apparaître dans le remplissage : elle est à
+0 elle aussi, comme les vraies clauses — le score ne fait pas la
+différence.)
 
 > **Pourquoi `confiance_globale` vaut 0 en 3b — biais connu, non calibré.**
 > Formule actuelle (`app/pipeline/confiance.py:46-50`) :
@@ -116,8 +117,9 @@ inventée par v1 a disparu (observé en répétition). Puis `confiance_globale` 
 > global        = min(confiance de toutes les clauses)
 > ```
 >
-> Les requêtes 3 et 3b portent les mêmes clauses ; seule la répétition
-> change. Observé en répétition (2026-09-25) :
+> Les requêtes 3 et 3b portent la même résiliation et le même droit
+> applicable ; seule la répétition change. Observé en répétition
+> (2026-09-25) :
 >
 > | Requête | Sections où chaque clause est vue | Confiance par clause | `confiance_globale` |
 > | ------- | --------------------------------- | -------------------- | ------------------- |
@@ -156,10 +158,10 @@ inventée par v1 a disparu (observé en répétition). Puis `confiance_globale` 
 > `score_faible`, et toucher à `app/pipeline/` relance l'évaluation
 > payante (`alerte-eval.yml`). »
 
-**Dire** : « Même texte, deux versions (2b et 3b). À gauche une analyse
-partielle qui ne le dit pas et invente une clause, à droite le contrat
-entier, analysé section par section. Et le score de confiance, même
-imparfait, nous dit déjà où la mesure doit progresser. »
+**Dire** : « Même texte, deux versions (2b et 3). À gauche une analyse
+partielle qui a perdu la non-concurrence sans le dire au juriste, à
+droite le contrat entier, analysé section par section. Et le score de
+confiance, même imparfait, nous dit déjà où la mesure doit progresser. »
 
 **Variante terminal** (pour rejouer avec un autre contrat sans toucher à
 Bruno — `c10.txt` et `c12.txt` sont encore plus longs) :

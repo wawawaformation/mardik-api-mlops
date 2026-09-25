@@ -1,5 +1,5 @@
 meta {
-  name: 3b. v2 — LE MÊME texte que 2b, sans troncature (score 0)
+  name: 3b. v2 — clauses citées une seule fois (score 0)
   type: http
   seq: 5
 }
@@ -19,11 +19,10 @@ body:json {
 }
 
 docs {
-  Exactement le même texte qu'en 2b, traité par v2 : les clauses
-  « résiliation » et « droit applicable », placées en fin de contrat et
-  perdues par la troncature v1, doivent réapparaître ici. Montrer aussi
-  `sections` (découpage par articles), `appels_llm` (un par section —
-  aucune perte), `confiance_globale` (score composite, absent de v1),
-  `cout_eur` et `latence_ms` face aux contraintes client (< 0,15 €,
-  P95 < 8 s).
+  65 articles de remplissage, puis une résiliation et un droit applicable
+  cités une seule fois, en fin de contrat. v2 trouve les deux clauses,
+  justes et citées mot pour mot, mais chacune n'est vue que dans une
+  section : corroboration = 0, score 0. À comparer avec la 3, où les
+  mêmes clauses sont répétées dans trois chapitres (score ~0,99) : la
+  formule mesure la répétition, pas la justesse.
 }
