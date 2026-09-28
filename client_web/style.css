@@ -251,6 +251,10 @@ input:focus-visible, select:focus-visible {
   border-radius: 2px 2px 0 0;
 }
 
+/* Tranche sous le seuil de score faible : couleur d'alerte, jamais la
+   couleur seule (le compte au-dessus de la barre reste affiché). */
+.chart--vertical .chart__bar--alert { background: var(--critical); }
+
 /* Borne inférieure de la tranche, sous chaque barre — remplace l'ancien axe à
    3 graduations qui ne permettait pas de rattacher une barre à sa tranche. */
 .chart--vertical .chart__col-label {

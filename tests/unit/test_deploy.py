@@ -1,6 +1,7 @@
 """Tests unitaires — ops/deploy.py (publier/canary/promotion/rollback/surveiller)."""
 from __future__ import annotations
 
+import json
 import time
 
 import pytest
@@ -12,6 +13,23 @@ from app.telemetry import Mesure, MetricsStore
 def _livrer_v2(registry, version="v2.0.0"):
     registry.etiqueter(version, Bundle.charger("v2"), commit="abc1234", note_eval=0.9)
     return version
+
+
+def _ecrire_regles(monkeypatch, tmp_path, **seuils):
+    """Pose un fichier de règles isolé (``REGLES_PILOTAGE_PATH``) ne portant
+    que les signaux passés en kwargs (``latence_p95="> 2 s"``, etc.)."""
+    chemin = tmp_path / "regles.json"
+    chemin.write_text(
+        json.dumps(
+            [
+                {"signal": signal, "seuil": seuil, "retroaction": "rollback",
+                 "declencheur": "auto", "trace": "Journal (auto)"}
+                for signal, seuil in seuils.items()
+            ]
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("REGLES_PILOTAGE_PATH", str(chemin))
 
 
 def test_prochaine_version_premiere_publication_v2_ignore_v1(registry):
@@ -305,3 +323,114 @@ def test_surveiller_sans_metriques_explicites_fusionne_v1_et_v2(monkeypatch, tmp
         )
     res = surveiller(registry, fenetre_s=60, minimum=10)
     assert res["mesures"] == 10
+
+
+# --------------------------------------------- surveiller() suit les règles
+
+
+def test_surveiller_seuil_latence_ajuste_par_les_regles(metriques, registry, monkeypatch, tmp_path):
+    """Un seuil de latence abaissé via /pilotage/regles doit changer la
+    décision de rollback : sans surcharge explicite, `surveiller` doit
+    utiliser le seuil de la règle, pas un seuil codé en dur."""
+    from ops.deploy import deployer_canary, surveiller
+
+    _livrer_v2(registry)
+    deployer_canary("v2.0.0", pourcentage=20, registry=registry)
+    _ecrire_regles(monkeypatch, tmp_path, latence_p95="> 2 s")
+
+    for _ in range(10):
+        metriques.enregistrer(
+            Mesure(ts=time.time(), version="v2.0.0", route="/analyse", latence_ms=2500, score=0.9)
+        )
+    res = surveiller(registry, metriques, fenetre_s=60, minimum=10)
+    assert res["derive"] is True and "latence" in res["motif"] and res["rollback"] is True
+
+
+def test_surveiller_critere_proportion_scores_faibles(metriques, registry, monkeypatch, tmp_path):
+    """Sans `score_min` explicite, le critère par défaut est la proportion
+    de scores < 0,6 (règle `score_faible`), pas la moyenne."""
+    from ops.deploy import deployer_canary, surveiller
+
+    _livrer_v2(registry)
+    deployer_canary("v2.0.0", pourcentage=20, registry=registry)
+    _ecrire_regles(monkeypatch, tmp_path, score_faible="> 20 % de scores < 0,6")
+
+    # 3 scores sur 10 (30 %) sous 0,6 : au-dessus du seuil de 20 %.
+    for i in range(10):
+        metriques.enregistrer(
+            Mesure(ts=time.time(), version="v2.0.0", route="/analyse", latence_ms=2500,
+                   score=(0.2 if i < 3 else 0.9))
+        )
+    res = surveiller(registry, metriques, fenetre_s=60, minimum=10)
+    assert res["derive"] is True and "score" in res["motif"]
+
+
+def test_surveiller_critere_proportion_scores_faibles_sous_le_seuil_pas_de_derive(
+    metriques, registry, monkeypatch, tmp_path
+):
+    from ops.deploy import deployer_canary, surveiller
+
+    _livrer_v2(registry)
+    deployer_canary("v2.0.0", pourcentage=20, registry=registry)
+    _ecrire_regles(monkeypatch, tmp_path, score_faible="> 20 % de scores < 0,6")
+
+    # 1 score sur 10 (10 %) sous 0,6 : en dessous du seuil de 20 %.
+    for i in range(10):
+        metriques.enregistrer(
+            Mesure(ts=time.time(), version="v2.0.0", route="/analyse", latence_ms=2500,
+                   score=(0.2 if i < 1 else 0.9))
+        )
+    res = surveiller(registry, metriques, fenetre_s=60, minimum=10)
+    assert res["derive"] is False
+
+
+def test_surveiller_critere_cout(metriques, registry, monkeypatch, tmp_path):
+    from ops.deploy import deployer_canary, surveiller
+
+    _livrer_v2(registry)
+    deployer_canary("v2.0.0", pourcentage=20, registry=registry)
+    _ecrire_regles(monkeypatch, tmp_path, cout_moyen="> 0,15 €")
+
+    for _ in range(10):
+        metriques.enregistrer(
+            Mesure(ts=time.time(), version="v2.0.0", route="/analyse", latence_ms=2500,
+                   score=0.9, cout_eur=0.20)
+        )
+    res = surveiller(registry, metriques, fenetre_s=60, minimum=10)
+    assert res["derive"] is True and "coût" in res["motif"]
+
+
+def test_surveiller_score_min_explicite_prioritaire_sur_la_regle(metriques, registry, monkeypatch, tmp_path):
+    """`score_min` fourni explicitement doit primer sur la règle
+    `score_faible` (compatibilité des appelants existants)."""
+    from ops.deploy import deployer_canary, surveiller
+
+    _livrer_v2(registry)
+    deployer_canary("v2.0.0", pourcentage=20, registry=registry)
+    # La règle seule déclencherait une dérive (30 % de scores bas > 20 %) ;
+    # `score_min` explicite change le critère et n'est pas franchi ici.
+    _ecrire_regles(monkeypatch, tmp_path, score_faible="> 20 % de scores < 0,6")
+
+    for i in range(10):
+        metriques.enregistrer(
+            Mesure(ts=time.time(), version="v2.0.0", route="/analyse", latence_ms=2500,
+                   score=(0.2 if i < 3 else 0.9))
+        )
+    res = surveiller(registry, metriques, fenetre_s=60, minimum=10, score_min=0.4)
+    assert res["derive"] is False
+
+
+def test_surveiller_cout_max_explicite_prioritaire_sur_la_regle(metriques, registry, monkeypatch, tmp_path):
+    from ops.deploy import deployer_canary, surveiller
+
+    _livrer_v2(registry)
+    deployer_canary("v2.0.0", pourcentage=20, registry=registry)
+    _ecrire_regles(monkeypatch, tmp_path, cout_moyen="> 0,05 €")  # la règle seule déclencherait
+
+    for _ in range(10):
+        metriques.enregistrer(
+            Mesure(ts=time.time(), version="v2.0.0", route="/analyse", latence_ms=2500,
+                   score=0.9, cout_eur=0.10)
+        )
+    res = surveiller(registry, metriques, fenetre_s=60, minimum=10, cout_moyen_max_eur=0.20)
+    assert res["derive"] is False

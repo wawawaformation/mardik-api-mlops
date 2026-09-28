@@ -322,8 +322,10 @@ Plan exécuté le 2026-09-23 sur `feature/chaine-llmops-intents` :
 - [ ] **Événements récents du tableau de bord** : `message` construit par
       `", ".join(f"{k}={v}")` (`ops/serveur_pilotage.py:208-217`) → dicts
       Python bruts à l'écran (`{'active': 'v1.0.0', 'canary': None}`).
-- [ ] **Seuil de coût** (0,15 €) absent de `/pilotage/regles`, donc encore
-      codé en dur dans `client_web/index.html`.
+- [x] **Seuil de coût** (0,15 €) absent de `/pilotage/regles`, donc encore
+      codé en dur dans `client_web/index.html` — fait le 2026-09-28 : règle
+      `cout_moyen` ajoutée aux règles par défaut, lue depuis `/pilotage/regles`
+      côté client.
 - [ ] `scripts/traffic_sim.py` vise `http://localhost:8000` par défaut
       (port direct) : passer `--url http://localhost:8090` pour passer par
       Caddy.

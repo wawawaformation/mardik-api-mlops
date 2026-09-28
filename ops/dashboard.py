@@ -10,7 +10,8 @@ Contrat :
           "par_version": {
              "v1.0.0": {"requetes": 115, "trafic_pct": 89.8, "latence_p50_ms": …,
                         "latence_p95_ms": …, "taux_erreur": 0.02,
-                        "score_moyen": null, "cout_total_eur": …},
+                        "score_moyen": null, "cout_total_eur": …,
+                        "distribution_score": [{"borne_min": 0.0, "borne_max": 0.2, "n": 0}, …]},
              "v2.0.0": {… "score_moyen": 0.84 …}
           },
           "journal": [ …5 derniers événements de déploiement… ]
@@ -56,6 +57,25 @@ def percentile(valeurs: list[float], p: float) -> float:
     return round(valeurs[f] + (valeurs[c] - valeurs[f]) * (k - f), 1)
 
 
+_TRANCHES_SCORE = [(0.0, 0.2), (0.2, 0.4), (0.4, 0.6), (0.6, 0.8), (0.8, 1.0)]
+
+
+def distribution_score(scores: list[float]) -> list[dict[str, Any]]:
+    """Répartit ``scores`` en 5 tranches de 0,2 (``[0-0,2[`` … ``[0,8-1]``,
+    dernière tranche incluse à droite) : le nombre de mesures dans chacune,
+    pas seulement la moyenne — une moyenne à 0,75 peut cacher un tas de
+    scores très bas et un tas de scores très hauts, ce que la distribution
+    révèle et pas la moyenne."""
+    tranches = []
+    derniere = len(_TRANCHES_SCORE) - 1
+    for i, (bas, haut) in enumerate(_TRANCHES_SCORE):
+        n = sum(1 for s in scores if bas <= s <= haut) if i == derniere else sum(
+            1 for s in scores if bas <= s < haut
+        )
+        tranches.append({"borne_min": bas, "borne_max": haut, "n": n})
+    return tranches
+
+
 def resume(
     metriques: MetricsStore | None = None,
     *,
@@ -89,6 +109,7 @@ def resume(
             "taux_erreur": round(sum(1 for m in ms if m.erreur) / requetes, 4) if requetes else 0.0,
             "score_moyen": round(sum(scores) / len(scores), 3) if scores else None,
             "cout_total_eur": round(sum(m.cout_eur for m in sans_erreur), 6),
+            "distribution_score": distribution_score(scores),
         }
 
     return {

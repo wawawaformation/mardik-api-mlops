@@ -2,6 +2,47 @@
 
 > Tracé horodaté, ordre inverse (plus récent en premier).
 
+## 2026-09-28 (règles ajustables bouclées sur `surveiller`, seuil de coût, distribution du score)
+
+Branche `feature/demo-ci`. TDD, `uv run pytest -q` → 144 verts (127 + 17
+nouveaux), `uv run ruff check` propre.
+
+- **`ops/regles.py` (nouveau)** : sort le chargement des règles ajustables
+  hors de `ops/serveur_pilotage.py` (défauts, lecture/écriture du fichier,
+  fusion par `signal` — une règle absente du fichier retombe sur sa valeur
+  par défaut) et ajoute le parsing des seuils numériques (`"> 8 s"` →
+  8000 ms, `"> 10 %"` → 0,10, `"> 20 % de scores < 0,6"` → proportion 0,20 +
+  score bas 0,6, `"> 0,15 €"` → 0,15). Une règle illisible retombe sur le
+  défaut avec un avertissement (log), jamais d'exception. `ops/deploy.py`
+  et `ops/serveur_pilotage.py` importent ce module — pas d'import du
+  serveur FastAPI depuis `ops/deploy.py`.
+- **`ops/deploy.py::surveiller`** : les seuils (`score_min`,
+  `taux_erreur_max`, `latence_p95_max_ms`, nouveau `cout_moyen_max_eur`)
+  passent à défaut `None` ; non fournis, ils viennent des règles ajustables
+  (`ops/regles.py`) — ajuster un seuil via `PUT /pilotage/regles/{signal}`
+  change désormais la décision de rollback. Fournis explicitement, ils
+  gardent la priorité (compatibilité des appelants existants). Sans
+  `score_min` explicite, le critère par défaut est la **proportion** de
+  scores < 0,6 (règle `score_faible`), pas la moyenne. Nouveau critère de
+  coût moyen (règle `cout_moyen`).
+- **Règle `cout_moyen`** (`> 0,15 €`, contrainte `docs/besoin_client.md`)
+  ajoutée aux règles par défaut de `/pilotage/regles`, ajustable comme les
+  autres via `PUT /pilotage/regles/cout_moyen`.
+- **`ops/dashboard.py::resume`** : chaque version porte désormais
+  `distribution_score` (5 tranches de 0,2, nombre de mesures par tranche)
+  — la proportion sous le seuil ne dit pas si les scores bas sont
+  concentrés ou dispersés. `GET /pilotage/dashboard`
+  (`ops/serveur_pilotage.py`) expose ce calcul (une seule fois, dans
+  `resume`) sous `distribution_score_par_version`, en ajout non cassant.
+- **`client_web/index.html`** : le seuil de coût affiché et utilisé pour le
+  statut vient désormais de `/pilotage/regles` (`extraireSeuilNumerique`,
+  comme les autres seuils) au lieu d'être codé en dur ; ajout d'un petit
+  histogramme par version (HTML/CSS pur) sous la distribution du score,
+  tranche sous le seuil de score faible en couleur d'alerte
+  (`.chart__bar--alert`, `client_web/style.css`).
+- **`client_web/app.js`** : libellé « Coût moyen » pour le signal
+  `cout_moyen` (`LIBELLE_SIGNAL`), utilisé par `client_web/journal.html`.
+
 ## 2026-09-28 (traçabilité du journal de pilotage — déclencheur/signal + refus de promotion)
 
 Branche `feature/demo-ci`. TDD, `uv run pytest -q` → 127 verts (124 + 3

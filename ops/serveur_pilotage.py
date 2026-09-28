@@ -12,12 +12,14 @@ serveur de pilotage réutilise ``ops/registry/`` tel quel ; les réponses HTTP
 respectent la forme du contrat gelé (mêmes noms de champs), mais les valeurs
 en dessous viennent du registre existant.
 
+Les règles ajustables (``ops/regles.py``, lues/écrites/tracées ici via
+``GET``/``PUT /pilotage/regles``) sont désormais consommées par la boucle de
+décision : ``ops.deploy.surveiller`` les charge pour ses seuils par défaut
+(un seuil explicite, passé en argument, garde la priorité — voir
+``ops/regles.py``).
+
 Hors périmètre de ce module (voir ``TODO.md``) : la régénération du
-Caddyfile (aucun container Caddy dans ``docker-compose.yml`` à ce stade) et
-le bouclage automatique des seuils ajustables (``PUT /pilotage/regles``) sur
-la boucle de décision (``ops.deploy.surveiller`` garde ses propres seuils par
-défaut) — les règles sont lues/écrites/tracées, pas encore consommées par la
-boucle.
+Caddyfile (aucun container Caddy dans ``docker-compose.yml`` à ce stade).
 
 Lancement : ``uvicorn ops.serveur_pilotage:app --host 0.0.0.0 --port 8000``
 (service ``serveur_pilotage`` du docker-compose, port hôte 8002).
@@ -29,10 +31,7 @@ jeu d'éval après validation par un juriste) — voir ``ops/enrichissement.py``
 """
 from __future__ import annotations
 
-import json
-import os
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
@@ -44,42 +43,9 @@ from ops.dashboard import percentile, resume, stores_metriques_par_defaut
 from ops.deploy import deployer_canary, promouvoir as deploy_promouvoir, rollback as deploy_rollback
 from ops.enrichissement import ErreurEnrichissement, lister as lister_enrichissement, verser as verser_enrichissement
 from ops.registry import Registry
+from ops.regles import ecrire_regles as _ecrire_regles_disque, lire_regles as _lire_regles_disque
 
 router = APIRouter(prefix="/pilotage", tags=["pilotage"])
-
-RACINE_OPS = Path(__file__).resolve().parent
-CHEMIN_REGLES_DEFAUT = RACINE_OPS / "regles_pilotage.json"
-
-REGLES_PAR_DEFAUT: list[dict[str, str]] = [
-    {
-        "signal": "latence_p95",
-        "seuil": "> 8 s",
-        "retroaction": "rollback",
-        "declencheur": "auto",
-        "trace": "Journal (auto)",
-    },
-    {
-        "signal": "taux_erreur",
-        "seuil": "> 10 %",
-        "retroaction": "rollback",
-        "declencheur": "auto",
-        "trace": "Journal (auto)",
-    },
-    {
-        "signal": "score_faible",
-        "seuil": "> 20 % de scores < 0,6",
-        "retroaction": "rollback + enrichissement du jeu d'éval",
-        "declencheur": "auto",
-        "trace": "Journal (auto)",
-    },
-    {
-        "signal": "canary",
-        "seuil": "contraintes tenues et v2 ≥ v1",
-        "retroaction": "promotion 10 % → 50 % → 100 %",
-        "declencheur": "auto_humain",
-        "trace": "Journal (auto ou humain)",
-    },
-]
 
 SEUIL_SCORE_FAIBLE = 0.6
 FENETRE_DASHBOARD_S = 300
@@ -128,26 +94,6 @@ class Rollback(BaseModel):
 
 def get_registry() -> Registry:
     return Registry()
-
-
-# --------------------------------------------------------------- règles
-
-
-def _chemin_regles() -> Path:
-    return Path(os.environ.get("REGLES_PILOTAGE_PATH", CHEMIN_REGLES_DEFAUT))
-
-
-def _lire_regles() -> list[dict[str, str]]:
-    chemin = _chemin_regles()
-    if not chemin.exists():
-        return [dict(r) for r in REGLES_PAR_DEFAUT]
-    return json.loads(chemin.read_text(encoding="utf-8"))
-
-
-def _ecrire_regles(regles: list[dict[str, str]]) -> None:
-    chemin = _chemin_regles()
-    chemin.parent.mkdir(parents=True, exist_ok=True)
-    chemin.write_text(json.dumps(regles, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 # ------------------------------------------------------------- répartition
@@ -219,6 +165,14 @@ def lire_dashboard(registry: Registry = Depends(get_registry)) -> dict[str, Any]
             ),
             "seuil_faible": SEUIL_SCORE_FAIBLE,
         },
+        # Extension non cassante : distribution du score par version (5
+        # tranches de 0,2), calculée une seule fois par `resume` — la
+        # proportion ci-dessus la réduit à un seul chiffre, insuffisant pour
+        # voir si les scores bas sont concentrés ou dispersés (cf. besoin
+        # client).
+        "distribution_score_par_version": {
+            version: v["distribution_score"] for version, v in r["par_version"].items()
+        },
         "evenements_recents": [
             {
                 "ts": e.get("date", ""),
@@ -237,19 +191,19 @@ def lire_dashboard(registry: Registry = Depends(get_registry)) -> dict[str, Any]
 
 @router.get("/regles")
 def lire_regles() -> dict[str, Any]:
-    return {"regles": _lire_regles()}
+    return {"regles": _lire_regles_disque()}
 
 
 @router.put("/regles/{signal}")
 def ajuster_seuil(
     signal: str, ajustement: AjustementSeuil, registry: Registry = Depends(get_registry)
 ) -> dict[str, Any]:
-    regles = _lire_regles()
+    regles = _lire_regles_disque()
     regle = next((r for r in regles if r["signal"] == signal), None)
     if regle is None:
         raise HTTPException(status_code=404, detail=f"signal inconnu : {signal!r}")
     regle["seuil"] = ajustement.seuil
-    _ecrire_regles(regles)
+    _ecrire_regles_disque(regles)
     registry.journaliser(
         "ajustement_seuil", signal=signal, seuil=ajustement.seuil, declencheur=ajustement.declencheur
     )

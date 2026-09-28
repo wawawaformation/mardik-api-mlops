@@ -11,6 +11,7 @@ const LIBELLE_SIGNAL = {
   latence_p95: "Latence P95",
   taux_erreur: "Taux d'erreur",
   score_faible: "Score < 0,6",
+  cout_moyen: "Coût moyen",
   canary: "Canary",
 };
 

@@ -36,7 +36,7 @@
       <div class="card kpi">
         <p class="kpi__label">Coût moyen</p>
         <p class="kpi__value" id="kpi-cout">—</p>
-        <p class="kpi__target">cible &lt; 0,15 €</p>
+        <p class="kpi__target" id="cible-cout">cible —</p>
         <p class="status" id="statut-cout"></p>
       </div>
 
@@ -65,6 +65,12 @@
         Proportion des analyses dont le score de confiance est sous le seuil affiché.
       </p>
       <div class="callout callout--warn" id="alerte-score" hidden></div>
+      <p class="card__intro">
+        Distribution par version (nombre de mesures par tranche de 0,2) : une moyenne ou
+        une proportion peuvent masquer des scores concentrés à la fois très bas et très
+        hauts, que la distribution révèle.
+      </p>
+      <div id="histogrammes-score-version"></div>
     </div>
 
     <div class="card">
@@ -104,6 +110,7 @@
 
       const seuilLatenceS = extraireSeuilNumerique(regles.latence_p95.seuil);
       const seuilErreurPct = extraireSeuilNumerique(regles.taux_erreur.seuil);
+      const seuilCoutEur = extraireSeuilNumerique(regles.cout_moyen.seuil);
 
       document.getElementById("cible-latence").textContent = `cible < ${seuilLatenceS} s`;
       document.getElementById("kpi-latence").textContent = formatSecondes(d.latence_p95_ms);
@@ -111,10 +118,12 @@
       statutLatence.className = statutClasse(d.latence_p95_ms, seuilLatenceS * 1000);
       statutLatence.textContent = statutLibelle(d.latence_p95_ms, seuilLatenceS * 1000);
 
+      document.getElementById("cible-cout").textContent =
+        `cible < ${seuilCoutEur.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €`;
       document.getElementById("kpi-cout").textContent = formatEuros(d.cout_moyen_eur);
       const statutCout = document.getElementById("statut-cout");
-      statutCout.className = statutClasse(d.cout_moyen_eur, 0.15);
-      statutCout.textContent = statutLibelle(d.cout_moyen_eur, 0.15);
+      statutCout.className = statutClasse(d.cout_moyen_eur, seuilCoutEur);
+      statutCout.textContent = statutLibelle(d.cout_moyen_eur, seuilCoutEur);
 
       document.getElementById("cible-erreur").textContent = `seuil ${seuilErreurPct} %`;
       document.getElementById("kpi-erreur").textContent = formatPourcent(d.taux_erreur);
@@ -148,6 +157,28 @@
       } else {
         alerteScore.hidden = true;
       }
+
+      const histogrammes = document.getElementById("histogrammes-score-version");
+      const distributionParVersion = d.distribution_score_par_version || {};
+      const versions = Object.keys(distributionParVersion);
+      histogrammes.innerHTML = versions.length
+        ? versions.map((version) => {
+            const tranches = distributionParVersion[version];
+            const effectifMax = Math.max(1, ...tranches.map((t) => t.n));
+            const colonnes = tranches.map((t) => {
+              const ratio = (t.n / effectifMax) * 100;
+              const classeBarre = t.borne_max <= seuil ? "chart__bar chart__bar--alert" : "chart__bar";
+              const borneMin = t.borne_min.toString().replace(".", ",");
+              return `<div class="chart__col">
+                <span class="chart__count">${t.n}</span>
+                <div class="chart__bar-track"><div class="${classeBarre}" style="--ratio: ${ratio}%"></div></div>
+                <span class="chart__col-label">${borneMin}</span>
+              </div>`;
+            }).join("");
+            return `<p class="chart__note"><strong>${version}</strong></p>
+              <div class="chart chart--vertical">${colonnes}</div>`;
+          }).join("")
+        : "<p class=\"chart__note\">Aucun trafic sur cette fenêtre.</p>";
 
       document.getElementById("liste-evenements").innerHTML = d.evenements_recents.length
         ? d.evenements_recents.map((e) =>

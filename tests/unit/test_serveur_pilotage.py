@@ -90,7 +90,18 @@ def test_regles_par_defaut(client: TestClient, monkeypatch, tmp_path):
     r = client.get("/pilotage/regles")
     assert r.status_code == 200
     signaux = {regle["signal"] for regle in r.json()["regles"]}
-    assert signaux == {"latence_p95", "taux_erreur", "score_faible", "canary"}
+    assert signaux == {"latence_p95", "taux_erreur", "score_faible", "cout_moyen", "canary"}
+
+
+def test_regle_cout_moyen_ajustable(client: TestClient, monkeypatch, tmp_path):
+    monkeypatch.setenv("REGLES_PILOTAGE_PATH", str(tmp_path / "regles.json"))
+    r = client.get("/pilotage/regles")
+    regle = next(x for x in r.json()["regles"] if x["signal"] == "cout_moyen")
+    assert regle["seuil"] == "> 0,15 €"
+
+    r2 = client.put("/pilotage/regles/cout_moyen", json={"seuil": "> 0,20 €", "declencheur": "humain"})
+    assert r2.status_code == 200
+    assert r2.json()["seuil"] == "> 0,20 €"
 
 
 def test_ajuster_seuil_modifie_et_persiste(client: TestClient, monkeypatch, tmp_path, registry: Registry):

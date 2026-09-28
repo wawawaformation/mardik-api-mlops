@@ -23,14 +23,21 @@ Contrat attendu (le registre — ``ops/registry`` — enregistre ; ce module dé
         retiré ; sinon l'active redevient ``precedente``. Journalise ``rollback``
         avec le motif et les versions avant/après.
 
-    surveiller(registry=None, metriques=None, *, fenetre_s=120, score_min=0.7,
-               taux_erreur_max=0.10, latence_p95_max_ms=8000, minimum=10) -> dict
+    surveiller(registry=None, metriques=None, *, fenetre_s=120, score_min=None,
+               taux_erreur_max=None, latence_p95_max_ms=None,
+               cout_moyen_max_eur=None, minimum=10) -> dict
         Lit les mesures récentes (``MetricsStore``) de la version sous
-        surveillance (le canary s'il y en a un, sinon l'active). Dérive si
-        score moyen < ``score_min``, ou taux d'erreur > ``taux_erreur_max``, ou
-        P95 > ``latence_p95_max_ms`` — sur au moins ``minimum`` mesures.
-        En cas de dérive : rollback automatique + entrée au journal.
-        Renvoie {"version", "mesures", "derive", "motif", "rollback"}.
+        surveillance (le canary s'il y en a un, sinon l'active). Les seuils
+        non fournis explicitement viennent des règles ajustables
+        (``ops/regles.py`` — ``GET``/``PUT /pilotage/regles``) ; un seuil
+        fourni explicitement garde la priorité (compatibilité des appelants
+        existants). Dérive si taux d'erreur > seuil, ou P95 > seuil, ou coût
+        moyen > seuil, ou (score_min explicite) score moyen < score_min,
+        ou (sinon) proportion de scores < seuil bas de la règle
+        ``score_faible`` supérieure au seuil de cette règle — sur au moins
+        ``minimum`` mesures. En cas de dérive : rollback automatique +
+        entrée au journal. Renvoie {"version", "mesures", "derive", "motif",
+        "rollback"}.
 
 Ligne de commande : ``python -m ops.deploy publier v2.0.0 | canary v2.0.0 --pourcentage 10
 | promouvoir v2.0.0 | rollback | surveiller [--boucle]``.
@@ -48,6 +55,13 @@ from app.llm_client import Bundle
 from app.telemetry import Mesure, MetricsStore
 from ops.dashboard import percentile, stores_metriques_par_defaut
 from ops.registry import Registry
+from ops.regles import (
+    regles_par_signal,
+    seuil_cout_moyen_eur,
+    seuil_latence_p95_ms,
+    seuil_score_faible,
+    seuil_taux_erreur,
+)
 
 
 class ErreurDeploiement(RuntimeError):
@@ -171,9 +185,10 @@ def surveiller(
     metriques: MetricsStore | None = None,
     *,
     fenetre_s: float = 120,
-    score_min: float = 0.7,
-    taux_erreur_max: float = 0.10,
-    latence_p95_max_ms: float = 8000,
+    score_min: float | None = None,
+    taux_erreur_max: float | None = None,
+    latence_p95_max_ms: float | None = None,
+    cout_moyen_max_eur: float | None = None,
     minimum: int = 10,
 ) -> dict[str, Any]:
     reg = registry or Registry()
@@ -185,24 +200,48 @@ def surveiller(
         m for store in stores for m in store.lire(depuis_s=fenetre_s, version=version)
     ]
 
+    regles = regles_par_signal()
+
     motifs: list[str] = []
     if len(mesures) >= minimum:
         taux_erreur = sum(1 for m in mesures if m.erreur) / len(mesures)
-        if taux_erreur > taux_erreur_max:
-            motifs.append(f"taux d'erreur {taux_erreur:.1%} > seuil {taux_erreur_max:.1%}")
+        seuil_erreur = taux_erreur_max if taux_erreur_max is not None else seuil_taux_erreur(regles)
+        if taux_erreur > seuil_erreur:
+            motifs.append(f"taux d'erreur {taux_erreur:.1%} > seuil {seuil_erreur:.1%}")
 
         sans_erreur = [m for m in mesures if not m.erreur]
         scores = [m.score for m in sans_erreur if m.score is not None]
-        if scores:
-            score_moyen = sum(scores) / len(scores)
-            if score_moyen < score_min:
-                motifs.append(f"score moyen {score_moyen:.2f} < seuil {score_min:.2f}")
+        if score_min is not None:
+            if scores:
+                score_moyen = sum(scores) / len(scores)
+                if score_moyen < score_min:
+                    motifs.append(f"score moyen {score_moyen:.2f} < seuil {score_min:.2f}")
+        elif scores:
+            proportion_max, score_bas = seuil_score_faible(regles)
+            proportion_faible = sum(1 for s in scores if s < score_bas) / len(scores)
+            if proportion_faible > proportion_max:
+                motifs.append(
+                    f"score : {proportion_faible:.1%} des scores < {score_bas:g} "
+                    f"> seuil {proportion_max:.1%}"
+                )
 
         latences = sorted(m.latence_ms for m in sans_erreur)
         if latences:
             p95 = percentile(latences, 95)
-            if p95 > latence_p95_max_ms:
-                motifs.append(f"latence P95 {p95:.0f}ms > seuil {latence_p95_max_ms:.0f}ms")
+            seuil_latence = (
+                latence_p95_max_ms if latence_p95_max_ms is not None else seuil_latence_p95_ms(regles)
+            )
+            if p95 > seuil_latence:
+                motifs.append(f"latence P95 {p95:.0f}ms > seuil {seuil_latence:.0f}ms")
+
+        couts = [m.cout_eur for m in sans_erreur]
+        if couts:
+            cout_moyen = sum(couts) / len(couts)
+            seuil_cout = (
+                cout_moyen_max_eur if cout_moyen_max_eur is not None else seuil_cout_moyen_eur(regles)
+            )
+            if cout_moyen > seuil_cout:
+                motifs.append(f"coût moyen {cout_moyen:.3f}€ > seuil {seuil_cout:.3f}€")
 
     motif = "; ".join(motifs)
     resultat: dict[str, Any] = {

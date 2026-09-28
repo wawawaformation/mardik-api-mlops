@@ -73,6 +73,33 @@ def test_resume_sans_metriques_explicites_fusionne_v1_et_v2(monkeypatch, tmp_pat
     assert set(r["par_version"]) == {"v1.0.0", "v2.0.0"}
 
 
+def test_resume_distribution_score_par_version(metriques: MetricsStore, registry):
+    """5 tranches de 0,2 par version, avec le nombre de mesures dans
+    chacune — pas seulement la proportion sous le seuil."""
+    from ops.dashboard import resume
+
+    maintenant = time.time()
+    for score in (0.1, 0.3, 0.3, 0.55, 0.7, 0.95, 1.0):
+        metriques.enregistrer(
+            Mesure(ts=maintenant, version="v2.0.0", route="/analyse", latence_ms=100, score=score)
+        )
+    r = resume(metriques, fenetre_s=60, registry=registry)
+    tranches = r["par_version"]["v2.0.0"]["distribution_score"]
+    assert [t["n"] for t in tranches] == [1, 2, 1, 1, 2]
+    assert tranches[0]["borne_min"] == 0.0 and tranches[0]["borne_max"] == 0.2
+    assert tranches[-1]["borne_min"] == 0.8 and tranches[-1]["borne_max"] == 1.0
+
+
+def test_resume_distribution_score_sans_scores_est_a_zero(metriques: MetricsStore, registry):
+    from ops.dashboard import resume
+
+    metriques.enregistrer(
+        Mesure(ts=time.time(), version="v1.0.0", route="/analyse", latence_ms=100, score=None)
+    )
+    r = resume(metriques, fenetre_s=60, registry=registry)
+    assert [t["n"] for t in r["par_version"]["v1.0.0"]["distribution_score"]] == [0, 0, 0, 0, 0]
+
+
 def test_rendre_texte_contient_les_versions():
     from ops.dashboard import rendre_texte
 
