@@ -281,6 +281,23 @@ Plan exécuté le 2026-09-23 sur `feature/chaine-llmops-intents` :
 
 ## Constats de la répétition de démo (2026-09-25)
 
+- [x] **3e boucle de rétroaction — enrichissement du jeu d'éval livrée
+      (2026-09-28, TDD)** : `ops/enrichissement.py` (capture, pseudonymisation
+      regex minimale, versement), branché dans `app/api_v2.py::analyser_v2`,
+      2 routes dans `ops/serveur_pilotage.py`. Détail :
+      `CHANGELOG.md` (2026-09-28).
+- [ ] **UI client web pour l'enrichissement** : pas de page dans
+      `client_web/` pour lister/valider les cas en attente — le juriste
+      passe par l'API (`GET`/`POST /pilotage/enrichissement`) ou Bruno.
+- [ ] **Pseudonymisation regex minimale** : `ops/enrichissement.py::pseudonymiser`
+      ne couvre que montant/email/SIRET/téléphone — pas la détection de
+      noms propres/adresses par zones (début/fin) décrite dans
+      `anonymisation.md`. À enrichir si des cas réels laissent passer des
+      données personnelles.
+- [ ] **Cas en attente à commiter par un humain** : `eval/a_valider/*.json`
+      et les fichiers versés (`eval/contrats/p-*.txt`, ligne dans
+      `eval/attendus.jsonl`) ne partent en PR que si quelqu'un les commit —
+      aucune automatisation de ce commit aujourd'hui.
 - [ ] **Calibrer le score de confiance v2** (`app/pipeline/confiance.py`) :
       la corroboration `min(1, (n - 1) / 2)` vaut 0 pour une clause vue
       dans une seule section (cas normal d'un contrat), et le global prend

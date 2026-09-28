@@ -43,6 +43,7 @@ from app.pipeline.consolidation import consolider
 from app.pipeline.decoupage import Section, decouper
 from app.pipeline.extraction import extraire
 from app.telemetry import Mesure, Telemetry, build_default_telemetry
+from ops.enrichissement import capturer
 
 router = APIRouter(prefix="/v2", tags=["v2"])
 VERSION_V2 = "v2"
@@ -155,6 +156,21 @@ def analyser_v2(texte: str, client: LLMClient, telemetry: Telemetry) -> ReponseA
 
         clauses_consolidees = consolider(par_section)
         clauses_notees, confiance_globale = scorer(clauses_consolidees, len(sections), texte)
+
+        # Capture pour le jeu d'éval (3e boucle de rétroaction) : ne doit
+        # jamais faire échouer une analyse, seul endroit où un except large
+        # est justifié (voir docstring de ops.enrichissement).
+        cas_id = None
+        try:
+            cas_id = capturer(
+                texte,
+                clauses=[c.type for c in clauses_notees],
+                confiance_globale=confiance_globale,
+                version=bundle.version,
+            )
+        except Exception as exc:  # noqa: BLE001
+            telemetry.logger.warning("enrichissement.capture_echouee", cause=str(exc))
+
         latence = (time.perf_counter() - debut) * 1000
         telemetry.metriques.enregistrer(
             Mesure(
@@ -175,6 +191,7 @@ def analyser_v2(texte: str, client: LLMClient, telemetry: Telemetry) -> ReponseA
             latence_ms=round(latence, 1),
             clauses=len(clauses_notees),
             sections=len(sections),
+            **({"cas_id": cas_id} if cas_id else {}),
         )
     return ReponseAnalyseV2(
         clauses=[

@@ -21,6 +21,11 @@ boucle.
 
 Lancement : ``uvicorn ops.serveur_pilotage:app --host 0.0.0.0 --port 8000``
 (service ``serveur_pilotage`` du docker-compose, port hôte 8002).
+
+Extension du contrat (3e boucle de rétroaction, hors contrat gelé) :
+``GET /pilotage/enrichissement`` (cas capturés en attente de validation
+humaine) et ``POST /pilotage/enrichissement/{cas_id}`` (versement dans le
+jeu d'éval après validation par un juriste) — voir ``ops/enrichissement.py``.
 """
 from __future__ import annotations
 
@@ -37,6 +42,7 @@ from pydantic import BaseModel
 
 from ops.dashboard import percentile, resume, stores_metriques_par_defaut
 from ops.deploy import deployer_canary, promouvoir as deploy_promouvoir, rollback as deploy_rollback
+from ops.enrichissement import ErreurEnrichissement, lister as lister_enrichissement, verser as verser_enrichissement
 from ops.registry import Registry
 
 router = APIRouter(prefix="/pilotage", tags=["pilotage"])
@@ -99,6 +105,14 @@ class Promotion(BaseModel):
 
     cible_pct: Literal[50, 100]
     declencheur: Literal["auto", "humain"] | None = None
+
+
+class VersementEnrichissement(BaseModel):
+    """Corps de ``POST /pilotage/enrichissement/{cas_id}`` — extension du
+    contrat (voir en-tête du module)."""
+
+    clauses_attendues: list[str]
+    par: str
 
 
 class Rollback(BaseModel):
@@ -349,6 +363,32 @@ def lire_journal(
     if signal is not None:
         entrees = [e for e in entrees if e["signal"] == signal]
     return {"entrees": entrees[-limite:]}
+
+
+# ------------------------------------------------------------ enrichissement
+
+
+@router.get("/enrichissement")
+def lire_enrichissement() -> dict[str, Any]:
+    return {"cas": lister_enrichissement()}
+
+
+@router.post("/enrichissement/{cas_id}", status_code=201)
+def verser(
+    cas_id: str, versement: VersementEnrichissement, registry: Registry = Depends(get_registry)
+) -> dict[str, Any]:
+    try:
+        contrat_id = verser_enrichissement(
+            cas_id,
+            clauses_attendues=versement.clauses_attendues,
+            par=versement.par,
+            registry=registry,
+        )
+    except ErreurEnrichissement as exc:
+        message = str(exc)
+        statut = 404 if "inconnu" in message else 409
+        raise HTTPException(status_code=statut, detail=message)
+    return {"contrat_id": contrat_id}
 
 
 def creer_app_pilotage() -> FastAPI:

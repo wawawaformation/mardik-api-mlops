@@ -88,7 +88,9 @@ services:
 
   # Le serveur de pilotage (ops/serveur_pilotage.py) : les 6 routes du
   # contrat gelé, réutilisant ops/registry/ existant (voir en-tête du
-  # module et docs/conception_revue/pilotage/formats-ops.md).
+  # module et docs/conception_revue/pilotage/formats-ops.md), plus les 2
+  # routes d'enrichissement (``ops/enrichissement.py``) — même dossier
+  # ``eval/a_valider`` que les containers `app`/`v2` qui capturent.
   serveur_pilotage:
     build: .
     command: uvicorn ops.serveur_pilotage:app --host 0.0.0.0 --port 8000
@@ -100,6 +102,7 @@ services:
       REGISTRY_PATH: /app/ops/registry
     volumes:
       - ./ops:/app/ops
+      - ./eval:/app/eval
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)"]
       interval: 5s

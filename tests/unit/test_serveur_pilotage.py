@@ -244,3 +244,71 @@ def test_journal_filtre_par_signal(client: TestClient, registry: Registry):
     r = client.get("/pilotage/journal", params={"signal": "latence_p95"})
     entrees = r.json()["entrees"]
     assert len(entrees) == 1 and entrees[0]["signal"] == "latence_p95"
+
+
+# ---------------------------------------------------------- enrichissement
+
+
+def test_enrichissement_liste_les_cas_en_attente(client: TestClient):
+    from ops.enrichissement import capturer
+
+    capturer("texte A", clauses=[], confiance_globale=0.2, version="v2.0.0")
+    r = client.get("/pilotage/enrichissement")
+    assert r.status_code == 200
+    cas = r.json()["cas"]
+    assert len(cas) == 1
+    assert cas[0]["texte"] == "texte A"
+
+
+def test_enrichissement_liste_vide(client: TestClient):
+    r = client.get("/pilotage/enrichissement")
+    assert r.status_code == 200
+    assert r.json() == {"cas": []}
+
+
+def test_enrichissement_versement_201(client: TestClient, monkeypatch, tmp_path, registry: Registry):
+    from ops.enrichissement import capturer
+
+    monkeypatch.setenv("EVAL_CONTRATS_PATH", str(tmp_path / "contrats"))
+    monkeypatch.setenv("EVAL_ATTENDUS_PATH", str(tmp_path / "attendus.jsonl"))
+    cas_id = capturer("texte A", clauses=["durée"], confiance_globale=0.2, version="v2.0.0")
+
+    r = client.post(
+        f"/pilotage/enrichissement/{cas_id}",
+        json={"clauses_attendues": ["durée", "prix et paiement"], "par": "juriste@example.com"},
+    )
+    assert r.status_code == 201
+    assert r.json()["contrat_id"] == cas_id
+    assert (tmp_path / "contrats" / f"{cas_id}.txt").exists()
+
+    entree = registry.journal()[-1]
+    assert entree["evenement"] == "enrichissement" and entree["par"] == "juriste@example.com"
+
+    r2 = client.get("/pilotage/enrichissement")
+    assert r2.json() == {"cas": []}
+
+
+def test_enrichissement_versement_cas_inconnu_404(client: TestClient):
+    r = client.post(
+        "/pilotage/enrichissement/p-inconnu",
+        json={"clauses_attendues": ["durée"], "par": "juriste@example.com"},
+    )
+    assert r.status_code == 404
+
+
+def test_enrichissement_versement_id_deja_present_409(
+    client: TestClient, monkeypatch, tmp_path
+):
+    from ops.enrichissement import capturer
+
+    monkeypatch.setenv("EVAL_CONTRATS_PATH", str(tmp_path / "contrats"))
+    monkeypatch.setenv("EVAL_ATTENDUS_PATH", str(tmp_path / "attendus.jsonl"))
+    (tmp_path / "contrats").mkdir(parents=True)
+    cas_id = capturer("texte A", clauses=[], confiance_globale=0.2, version="v2.0.0")
+    (tmp_path / "contrats" / f"{cas_id}.txt").write_text("déjà là", encoding="utf-8")
+
+    r = client.post(
+        f"/pilotage/enrichissement/{cas_id}",
+        json={"clauses_attendues": ["durée"], "par": "juriste@example.com"},
+    )
+    assert r.status_code == 409

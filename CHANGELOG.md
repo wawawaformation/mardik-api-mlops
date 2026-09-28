@@ -2,6 +2,49 @@
 
 > Tracé horodaté, ordre inverse (plus récent en premier).
 
+## 2026-09-28 (3e boucle de rétroaction — enrichissement du jeu d'éval)
+
+Branche `feature/demo-ci`. TDD, `uv run pytest -q` → 124 verts (105 + 19
+nouveaux), `uv run ruff check` propre.
+
+- **`ops/enrichissement.py` (nouveau)** : capture des cas de production à
+  faible confiance (`confiance_globale < 0,6`, même seuil que
+  `SEUIL_SCORE_FAIBLE`), texte pseudonymisé (`pseudonymiser` — regex
+  minimale : montant, email, SIRET, téléphone), fichiers en attente
+  `eval/a_valider/<cas_id>.json` (`capturer`/`lister`), versement définitif
+  après validation humaine (`verser`) : écrit `eval/contrats/<id>.txt` +
+  une ligne `eval/attendus.jsonl` (`contrat_id`, `pages` estimées,
+  `clauses_attendues`, `seuil_note` 0,75, `source: "production"`), journalise
+  au registre (`evenement: "enrichissement"`, `declencheur: "humain"`) et
+  supprime le cas en attente. Ids non réutilisables (`ErreurEnrichissement`
+  si contrat déjà présent), cas inconnu également signalé par une erreur.
+- **`app/api_v2.py::analyser_v2`** : appelle `capturer(...)` juste après
+  `scorer(...)`, dans un `try/except` large (seul endroit du module où
+  c'est justifié) — une capture ne doit jamais faire échouer une analyse.
+  `cas_id` ajouté au log `analyse.terminee` quand capturé ; contrat de
+  réponse `/v2/analyse` inchangé.
+- **`ops/serveur_pilotage.py`** : extension du contrat (documentée dans la
+  docstring du module) — `GET /pilotage/enrichissement` (cas en attente) et
+  `POST /pilotage/enrichissement/{cas_id}` (`clauses_attendues`, `par`) →
+  201 avec `contrat_id`, 404 si cas inconnu, 409 si id déjà versé.
+- **`eval/run_eval.py`** : non modifié — `evaluer` prend déjà tous les ids
+  de `attendus.jsonl` (ou un `sous_ensemble` explicite), donc `gate.yml`
+  rejouera un cas versé sans changement. Vérifié par le test d'acceptance.
+- **`docker-compose.yml`** : volume `./eval:/app/eval` ajouté au service
+  `serveur_pilotage` (manquait), pour voir le même `eval/a_valider` que les
+  containers `app`/`v2` qui capturent.
+- **`tests/conftest.py`** : `CAPTURE_DIR` pointé vers `tmp_path` dans la
+  fixture autouse `environnement` — aucun test n'écrit dans `eval/`.
+- **Écart avec la conception** (`enrichissement-eval.md`) : le champ
+  `pages` de `attendus.jsonl` est une estimation grossière
+  (~3000 caractères/page) faute de pagination réelle disponible pour un
+  cas de production.
+- **Limite assumée (YAGNI)** : `pseudonymiser` ne couvre que montant/email/
+  SIRET/téléphone par regex — pas la détection de noms propres par zones
+  (début/fin) décrite dans `anonymisation.md`, ni de table de
+  correspondance réversible (aucune donnée réelle n'est capturée, donc pas
+  de besoin de restitution).
+
 ## 2026-09-25 (répétition de la démo via Caddy)
 
 Branche `feature/demo-ci`, 16 commits (`c9f2058` → `0f28585`), non
