@@ -89,6 +89,32 @@ def test_deployer_canary_pourcentage_explicite(registry):
     assert index["canary"] == "v2.0.0" and index["canary_percent"] == 30
 
 
+def test_cli_canary_declencheur_et_signal_transmis(registry, monkeypatch):
+    from ops.deploy import main
+
+    _livrer_v2(registry)
+    monkeypatch.setattr("ops.deploy.Registry", lambda: registry)
+    main(["canary", "v2.0.0", "--declencheur", "auto", "--signal", "eval-ok"])
+
+    entree = registry.journal()[-1]
+    assert entree["evenement"] == "canary"
+    assert entree["declencheur"] == "auto"
+    assert entree["signal"] == "eval-ok"
+
+
+def test_cli_canary_declencheur_par_defaut_humain_sans_signal(registry, monkeypatch):
+    from ops.deploy import main
+
+    _livrer_v2(registry)
+    monkeypatch.setattr("ops.deploy.Registry", lambda: registry)
+    main(["canary", "v2.0.0"])
+
+    entree = registry.journal()[-1]
+    assert entree["evenement"] == "canary"
+    assert entree["declencheur"] == "humain"
+    assert "signal" not in entree
+
+
 def test_promouvoir(registry):
     from ops.deploy import promouvoir
 

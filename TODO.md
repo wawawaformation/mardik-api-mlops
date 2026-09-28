@@ -308,9 +308,14 @@ Plan exécuté le 2026-09-23 sur `feature/chaine-llmops-intents` :
       l'agrégation `min`. Mettre à jour `tests/unit/pipeline/test_confiance.py`
       et les tests qui en dépendent ; toucher `app/pipeline/` relance
       `alerte-eval.yml` (payant). Impacte la règle de rollback `score_faible`.
-- [ ] **Tracer les refus de promotion** au journal : le 409 de
-      `POST /pilotage/promotion` part avant `journaliser`
-      (`ops/serveur_pilotage.py:282-298`).
+- [x] **Tracer les refus de promotion** au journal : fait le 2026-09-28 —
+      `promotion_refusee` journalisé pour les 2 cas décisionnels (mesures
+      insuffisantes, critères non tenus) avant la 409 ; « aucun canary »
+      reste non tracé (rien à décider).
+- [x] **Déclencheur/signal sur l'événement `canary` posé par la CLI** : fait
+      le 2026-09-28 — `ops.deploy` CLI (`canary`/`promouvoir`/`rollback`)
+      accepte `--declencheur`/`--signal` ; `cd-main.yml` passe
+      `--declencheur auto --signal eval-ok`.
 - [ ] **Rollback sans canary en cours** : aujourd'hui tracé quand même
       (lignes identiques avant/après au journal) — refuser (409) ou ne pas
       tracer.

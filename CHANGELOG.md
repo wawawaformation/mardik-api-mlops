@@ -2,6 +2,32 @@
 
 > Tracé horodaté, ordre inverse (plus récent en premier).
 
+## 2026-09-28 (traçabilité du journal de pilotage — déclencheur/signal + refus de promotion)
+
+Branche `feature/demo-ci`. TDD, `uv run pytest -q` → 127 verts (124 + 3
+nouveaux), `uv run ruff check` propre.
+
+- **`ops/deploy.py` (CLI)** : les sous-commandes `canary`, `promouvoir`,
+  `rollback` acceptent désormais `--declencheur` (`auto`/`humain`, défaut
+  `humain` — un humain tape la commande) et `--signal` (défaut : aucun),
+  transmis en `details` au registre. Avant ce correctif, seul le serveur de
+  pilotage passait `declencheur`/`signal` ; l'événement `canary` posé par la
+  CLI (donc par `cd-main.yml`) arrivait sans eux.
+- **`.github/workflows/cd-main.yml`** : l'appel `ops.deploy canary` du
+  déploiement initial à 10 % passe désormais `--declencheur auto --signal
+  eval-ok` (la chaîne déploie parce que le SHA porte `eval-ok`).
+- **`ops/serveur_pilotage.py::promouvoir`** : les deux refus de promotion
+  qui correspondent à une vraie décision (mesures insuffisantes, critères
+  non tenus) journalisent désormais `promotion_refusee` (version du canary,
+  `cible_pct`, `motif`, `declencheur`, `signal="canary"`) avant de lever le
+  409 — code HTTP et détail inchangés. Le refus « aucun canary en cours »
+  reste non journalisé (rien à décider).
+- **`client_web/app.js`** : libellé « Promotion refusée » et tag
+  `tag--danger` pour l'action `promotion_refusee` dans le journal.
+- **Docs** : `docs/demo-v1-v2-pilotage.md` (étape 10) corrigé — les refus de
+  promotion sont désormais tracés au journal (seul « aucun canary » ne
+  l'est pas).
+
 ## 2026-09-28 (3e boucle de rétroaction — enrichissement du jeu d'éval)
 
 Branche `feature/demo-ci`. TDD, `uv run pytest -q` → 124 verts (105 + 19

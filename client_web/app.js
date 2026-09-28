@@ -21,6 +21,7 @@ const LIBELLE_ACTION = {
   ajustement_seuil: "Seuil ajusté",
   maintien: "Maintien",
   publication: "Publication",
+  promotion_refusee: "Promotion refusée",
 };
 
 function libelleSignal(signal) {
@@ -32,7 +33,7 @@ function libelleAction(action) {
 }
 
 function tagAction(action) {
-  if (action === "rollback") return "tag tag--danger";
+  if (action === "rollback" || action === "promotion_refusee") return "tag tag--danger";
   if (action === "promotion" || action === "canary") return "tag tag--ok";
   return "tag";
 }

@@ -294,14 +294,13 @@ production. »
 **10. Pilotage — journal**.
 
 **Montrer** : chaque changement d'état de la démo — déploiement du
-canary, rollback, ajustement de seuil (et promotion si elle a abouti) —
+canary, rollback, ajustement de seuil, promotion (aboutie ou refusée) —
 avec date, signal, déclencheur (auto/humain).
 
-Attention : un **refus** de promotion (409) n'est **pas** tracé — le
-serveur répond avant d'écrire au journal (`ops/serveur_pilotage.py:282-298`).
-Ne pas annoncer « le refus de tout à l'heure » avant d'ouvrir le journal.
-Si la question vient : « Le journal trace les décisions qui changent
-l'état ; tracer aussi les refus est une amélioration identifiée. »
+Un **refus** de promotion (409, mesures insuffisantes ou critères non
+tenus) est désormais tracé au journal (`evenement: "promotion_refusee"`,
+avec le motif du refus) — seul le cas « aucun canary en cours » n'a rien à
+tracer (il n'y a pas de décision à documenter).
 
 **Dire** : « Qui, quand, pourquoi — pour chaque changement, humain ou
 automatique. C'est ce document qu'on relit à 3 h du matin si ça dérive »

@@ -298,18 +298,35 @@ def promouvoir(
 ) -> dict[str, Any]:
     canary_version, _ = registry.canary()
     if canary_version is None:
+        # Rien à décider : pas de canary en cours, donc pas d'entrée au journal.
         raise HTTPException(status_code=409, detail="aucun canary en cours")
 
+    declencheur_refus = promotion.declencheur or "auto"
     v1 = _stats_fenetre("v1.0.0", FENETRE_CANARY_S)
     v2 = _stats_fenetre(canary_version, FENETRE_CANARY_S)
     if v1 is None or v2 is None:
-        raise HTTPException(
-            status_code=409,
-            detail=f"pas assez de mesures sur la fenêtre ({MINIMUM_MESURES_CANARY} min. par version)",
+        detail = f"pas assez de mesures sur la fenêtre ({MINIMUM_MESURES_CANARY} min. par version)"
+        registry.journaliser(
+            "promotion_refusee",
+            version=canary_version,
+            cible_pct=promotion.cible_pct,
+            motif=detail,
+            declencheur=declencheur_refus,
+            signal="canary",
         )
+        raise HTTPException(status_code=409, detail=detail)
     motifs = _evaluer_criteres_promotion(v1, v2)
     if motifs:
-        raise HTTPException(status_code=409, detail="; ".join(motifs))
+        detail = "; ".join(motifs)
+        registry.journaliser(
+            "promotion_refusee",
+            version=canary_version,
+            cible_pct=promotion.cible_pct,
+            motif=detail,
+            declencheur=declencheur_refus,
+            signal="canary",
+        )
+        raise HTTPException(status_code=409, detail=detail)
 
     declencheur = promotion.declencheur or "auto"
     if promotion.cible_pct == 100:

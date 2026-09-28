@@ -132,6 +132,14 @@ def test_promotion_sans_canary_409(client: TestClient):
     assert r.status_code == 409
 
 
+def test_promotion_sans_canary_409_non_journalise(client: TestClient, registry: Registry):
+    """Rien à décider sans canary en cours : aucune entrée au journal."""
+    avant = len(registry.journal())
+    r = client.post("/pilotage/promotion", json={"cible_pct": 50})
+    assert r.status_code == 409
+    assert len(registry.journal()) == avant
+
+
 def test_promotion_pas_assez_de_mesures_409(client: TestClient, registry: Registry):
     _livrer_v2(registry)
     from ops.deploy import deployer_canary
@@ -155,6 +163,20 @@ def test_promotion_criteres_non_tenus_409(client: TestClient, metriques: Metrics
     r = client.post("/pilotage/promotion", json={"cible_pct": 50})
     assert r.status_code == 409
     assert "latence" in r.json()["detail"]
+
+    entree = registry.journal()[-1]
+    assert entree["evenement"] == "promotion_refusee"
+    assert entree["version"] == "v2.0.0"
+    assert entree["cible_pct"] == 50
+    assert "latence" in entree["motif"]
+    assert entree["declencheur"] == "auto"
+    assert entree["signal"] == "canary"
+
+    r_journal = client.get("/pilotage/journal")
+    derniere = r_journal.json()["entrees"][-1]
+    assert derniere["action"] == "promotion_refusee"
+    assert derniere["fingerprint"] == "v2.0.0"
+    assert derniere["signal"] == "canary"
 
 
 def test_promotion_criteres_tenus_200(client: TestClient, metriques: MetricsStore, registry: Registry):

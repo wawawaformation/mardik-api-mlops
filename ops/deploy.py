@@ -228,10 +228,16 @@ def main(argv: list[str] | None = None) -> int:
     c = sub.add_parser("canary")
     c.add_argument("version")
     c.add_argument("--pourcentage", type=int, default=None)
+    c.add_argument("--declencheur", choices=["auto", "humain"], default="humain")
+    c.add_argument("--signal", default=None)
     pr = sub.add_parser("promouvoir")
     pr.add_argument("version")
+    pr.add_argument("--declencheur", choices=["auto", "humain"], default="humain")
+    pr.add_argument("--signal", default=None)
     r = sub.add_parser("rollback")
     r.add_argument("--motif", default="manuel")
+    r.add_argument("--declencheur", choices=["auto", "humain"], default="humain")
+    r.add_argument("--signal", default=None)
     s = sub.add_parser("surveiller")
     s.add_argument("--boucle", action="store_true")
     s.add_argument("--intervalle", type=float, default=5.0)
@@ -242,11 +248,20 @@ def main(argv: list[str] | None = None) -> int:
         if args.commande == "publier":
             print(publier(args.version, bundle=args.bundle, seuil=args.seuil))
         elif args.commande == "canary":
-            print(deployer_canary(args.version, args.pourcentage))
+            details: dict[str, Any] = {"declencheur": args.declencheur}
+            if args.signal is not None:
+                details["signal"] = args.signal
+            print(deployer_canary(args.version, args.pourcentage, **details))
         elif args.commande == "promouvoir":
-            print(promouvoir(args.version))
+            details = {"declencheur": args.declencheur}
+            if args.signal is not None:
+                details["signal"] = args.signal
+            print(promouvoir(args.version, **details))
         elif args.commande == "rollback":
-            print(rollback(motif=args.motif))
+            details = {"declencheur": args.declencheur}
+            if args.signal is not None:
+                details["signal"] = args.signal
+            print(rollback(motif=args.motif, **details))
         elif args.commande == "surveiller":
             while True:
                 res = surveiller(fenetre_s=args.fenetre)
