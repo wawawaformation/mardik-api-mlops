@@ -638,8 +638,9 @@ Ce qui surprend en direct, tous vérifiés en répétition :
   corroboration, pas du modèle. Requêtes 3 (0,99) / 3b (0) le prouvent.
   Ne pas « corriger » à chaud en codant 1 en dur (fausse mesure, désactive
   la règle `score_faible`, casse les tests, relance l'éval payante).
-- **Promotion : 409 attendu** (10 mesures par version sur 2 min) ; les
-  refus ne sont **pas** journalisés, un rollback sans canary **l'est**.
+- **Promotion : 409 attendu** (10 mesures par version sur 2 min) ; depuis
+  le 2026-09-28 les refus sont journalisés (`promotion_refusee`), un
+  rollback sans canary l'est aussi.
 - **Le modèle varie** (`MOCK=off`) : une « durée » fantôme apparaît ou non
   sur le texte de remplissage. Ne promettre dans le script que ce qui a
   été rejoué.
@@ -651,3 +652,39 @@ l'interface. Deux collections aux noms proches ont déjà été confondues
 un bug.
 `ops/registry/journal.jsonl` et `ops/metrics*.jsonl` sont ignorés par git,
 `ops/registry/index.json` est suivi (modifié par chaque test de pilotage).
+
+## ▶ Reprendre ici — préparation du rendu (état au 2026-09-28)
+
+**Plus d'oral : c'est un rendu écrit.** Tout écart au brief doit être
+justifié par écrit, pas « défendu ». Les deux documents du rendu sont
+**hors du dépôt**, à la racine de `mardik_nouvelle_version/livrables/`
+(dossier créé à la demande explicite de l'utilisateur, exception au gel
+de la racine) :
+
+- `livrables/README.md` — note de rendu pour l'évaluateur : où est chaque
+  livrable, comment lancer (`docker compose up`, client sur
+  <http://localhost:8090>), choix justifiés (5 workflows au lieu de
+  `llmops.yml`, rollback via `ops/deploy.py` et pas un workflow GitHub,
+  frontend en lien local, validation humaine de l'enrichissement),
+  limites connues ;
+- `livrables/checklist.md` — brief critère par critère : tout est ✅, sauf
+  2 écarts 📝 justifiés dans le README (rollback « via la chaîne »,
+  lien local). Liste « Actions avant de livrer » = le reste à faire.
+
+Fait le 2026-09-28 (commits sur `feature/demo-ci`, **non poussés**, 36
+commits d'avance sur `origin/dev`) : 3e boucle enrichissement du jeu
+d'éval (`7d0ce2c`), lint Markdown de tout le dépôt + `.markdownlint-cli2.jsonc`
+(`811bdc6`), déclencheur/signal au journal + refus de promotion tracés
+(`c02a0b9`), règles ajustables consommées par `surveiller()` + règle
+`cout_moyen` + histogramme du score (`53da1ca`). 144 tests verts, ruff et
+markdownlint propres.
+
+Reste à faire (ordre) : voir `TODO.md` § « Rendu — reste à faire ».
+
+Pièges : le score v2 biaisé vers 0 + la règle `score_faible` (> 20 % de
+scores < 0,6) ⇒ `ops.deploy surveiller --boucle` rollbackera le canary v2
+presque à coup sûr (non lancé par docker compose). Toujours non commités
+volontairement : changements Bruno de l'utilisateur, sa modif de
+`.github/workflows/alerte-eval.yml`, effets de bord `ops/registry/index.json`
+et `ops/regles_pilotage.json`. Un push déclenche l'éval payante
+(`alerte-eval.yml`, chemins `eval/**` touchés).

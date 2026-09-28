@@ -2,6 +2,16 @@
 
 > Tracé horodaté, ordre inverse (plus récent en premier).
 
+## 2026-09-28 (préparation du rendu — lint Markdown, note de rendu)
+
+- **Lint Markdown de tout le dépôt** (`811bdc6`) : `markdownlint-cli2` → 0
+  erreur sur 32 fichiers. Nouveau `.markdownlint-cli2.jsonc` (MD013
+  désactivée, tabulations permises dans les blocs de code pour les
+  recettes Makefile, `docs/besoin_client.md` fourni et ignoré).
+- **Rendu hors dépôt** : `../livrables/README.md` (note de rendu pour
+  l'évaluateur, choix justifiés par écrit — plus d'oral) et
+  `../livrables/checklist.md` (brief critère par critère).
+
 ## 2026-09-28 (règles ajustables bouclées sur `surveiller`, seuil de coût, distribution du score)
 
 Branche `feature/demo-ci`. TDD, `uv run pytest -q` → 144 verts (127 + 17

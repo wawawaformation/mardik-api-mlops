@@ -1,5 +1,26 @@
 # TODO — mardik-api-mlops
 
+## Rendu — reste à faire (état au 2026-09-28)
+
+> Rendu écrit, sans oral. Détail : `../livrables/checklist.md` et
+> `../livrables/README.md` (hors dépôt).
+
+- [ ] Vérifier dans un vrai navigateur l'histogramme du score
+      (`client_web/index.html`, contrôlé seulement par relecture et
+      `node --check`)
+- [ ] Vérifier la boucle d'enrichissement sur la stack réelle : analyse à
+      faible score → `GET /pilotage/enrichissement` → `POST` de validation
+- [ ] Committer les changements Bruno de l'utilisateur (dossier `caddy`
+      déplacé dans `demo-cto-caddy`, fichiers `folder.bru`) et mettre à jour
+      les docs qui citent encore `bruno/caddy/`
+- [ ] Décider du sort de la modif locale de `.github/workflows/alerte-eval.yml`
+- [ ] Pousser `feature/demo-ci` (36 commits ; déclenche l'éval payante)
+- [ ] PR `feature/demo-ci` → `dev`, puis `dev` → `main` : `ci`, `revue`,
+      `gate`, `cd-main` au vert
+- [ ] Assembler le rendu : lien GitHub (`main`), `livrables/README.md`,
+      `livrables/checklist.md`, PDF de `conception_figee/livrables/`, vidéo
+      `video/montage/demo-ci-montage-v1.mp4`
+
 ## Analyse préalable (fait)
 
 - [x] Lire le code source fourni et le confronter à `conception_figee/`
