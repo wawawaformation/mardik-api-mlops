@@ -8,7 +8,7 @@
 > et Q14 sont modifiées ci-dessous ; le reste du document original est
 > inchangé (non reproduit ici — voir l'original pour Q1-Q8, Q11, Q13, Q15-Q16).
 
-### Q9 — Par rapport à quoi mesure-t-on la dérive du score de confiance ? (révisé)
+## Q9 — Par rapport à quoi mesure-t-on la dérive du score de confiance ? (révisé)
 
 La dérive se mesure sur la **fenêtre glissante de production** (les mesures
 des `fenetre_s` dernières secondes de `metrics.jsonl`), pas sur la
@@ -18,7 +18,7 @@ un seuil → dérive.
 
 → Voir `../pilotage/fenetre-glissante-seuils.md` (révisé) et `drift-proxy.md`.
 
-### Q10 — Combien de requêtes au minimum avant de conclure à une dérive ? (révisé)
+## Q10 — Combien de requêtes au minimum avant de conclure à une dérive ? (révisé)
 
 **10 mesures** minimum dans la fenêtre avant de décider (valeur des tests
 d'acceptance fournis et du stub `ops.deploy.surveiller`). En dessous,
@@ -30,7 +30,7 @@ requêtes fixe, contrairement à la décision initiale.
 
 → Voir `../pilotage/fenetre-glissante-seuils.md` (révisé).
 
-### Q12 — Comment distinguer une vraie dérive du bruit ? (révisé)
+## Q12 — Comment distinguer une vraie dérive du bruit ? (révisé)
 
 Trois garde-fous :
 
@@ -44,7 +44,7 @@ Trois garde-fous :
 
 → Voir `../pilotage/fenetre-glissante-seuils.md` (révisé).
 
-### Q14 — Promotion canary : critères, durée, paliers, si critères non tenus ? (révisé)
+## Q14 — Promotion canary : critères, durée, paliers, si critères non tenus ? (révisé)
 
 - **Paliers** : 10 % → 50 % → 100 %.
 - **Critères** (sur la fenêtre d'observation de 120 s) : respecter les

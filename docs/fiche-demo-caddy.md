@@ -14,7 +14,7 @@ docker compose ps
 ## 2. Topologie actuelle
 
 | Service | Port hôte | Rôle | Derrière Caddy ? |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `caddy` | **8090** | point d'entrée unique de l'API (Caddyfile statique) | — |
 | `app` | 8000 | `/v1`, `/v2`, `/analyse` (gateway) — accès direct toujours possible | oui (`/v1`, `/analyse`, `/gateway`) |
 | `v2` | 8001 | `/v2/analyse` isolé | oui (`/v2`) |

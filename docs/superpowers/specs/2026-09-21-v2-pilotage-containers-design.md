@@ -16,7 +16,7 @@
 ## Décisions
 
 | Sujet | Décision |
-|---|---|
+| --- | --- |
 | Distinction des services | **Ports hôte différents** (pas d'IP fixe, pas de réseau custom) |
 | Service `app` existant | **Inchangé** (v1 + v2 + gateway, port 8000, confort de dev) |
 | Contenu de `serveur_pilotage` | **Squelette** : `/health` + 6 routes `/pilotage/*` en 501 |
@@ -29,7 +29,7 @@
 ## Architecture
 
 | Service compose | Port hôte → conteneur | Contenu servi |
-|---|---|---|
+| --- | --- | --- |
 | `app` (existant) | 8000 → 8000 | `/v1`, `/v2`, gateway (inchangé) |
 | `v2` (nouveau) | 8001 → 8000 | `/v2/analyse`, `/health` |
 | `serveur_pilotage` (nouveau) | 8002 → 8000 | `/health`, `/pilotage/*` |

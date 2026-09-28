@@ -59,7 +59,7 @@ make test-acceptance         # 9 rouges, 1 vert : l'état attendu du lundi matin
 ## Commandes
 
 | Commande | Quoi |
-|---|---|
+| --- | --- |
 | `make up` / `make down` | app + proxy + dashboard (docker compose) |
 | `make test` | tout, en `MOCK=on` |
 | `make test-integration` | les tests hérités de la remédiation (verts) |
@@ -75,7 +75,7 @@ Déploiement : `python -m ops.deploy publier v2.0.0 | canary v2.0.0 --pourcentag
 ## Services docker compose
 
 | Service | Port hôte | Rôle |
-|---|---|---|
+| --- | --- | --- |
 | `app` | 8000 | v1 + v2 + gateway ensemble (confort de dev) |
 | `v2` | 8001 | `/v2/analyse` seule (`create_app_v2`), métriques dans `ops/metrics_v2.jsonl` |
 | `serveur_pilotage` | 8002 | squelette `/pilotage/*` (501), `/health` |
@@ -89,7 +89,7 @@ commande de lancement, pas par une variable d'environnement. Vérifier :
 
 ## Arborescence
 
-```
+```text
 app/          main.py (FastAPI : create_app + create_app_v2), api_v1.py [INTOUCHABLE], api_v2.py,
               gateway.py [STUB], llm_client.py [FOURNI], telemetry.py [FOURNI], pipeline/
 models/       v1/config.yaml [FOURNI], v2/config.yaml

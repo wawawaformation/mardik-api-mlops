@@ -16,14 +16,12 @@ numbersections: false
 > point** (il affiche encore la fenêtre en nombre de requêtes) — non
 > reconstruit ici, car il vit dans le dépôt `mardik_nouvelle_version`.
 
-# Tableau de pilotage
-
 À quel seuil chaque signal déclenche quelle rétroaction, et où la décision est
 tracée. Les trois boucles de rétroaction du brief (rollback sur signal,
 promotion canary, enrichissement du jeu d'évaluation) s'y lisent en une table.
 
 | Signal | Seuil | Rétroaction | Trace |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Latence P95 | > 8 s | Rollback | Journal (auto) |
 | Taux d'erreur | > 10 % | Rollback | Journal (auto) |
 | Score de confiance | > 20 % de scores < 0,6 | Rollback + enrichissement du jeu d'éval | Journal (auto) |

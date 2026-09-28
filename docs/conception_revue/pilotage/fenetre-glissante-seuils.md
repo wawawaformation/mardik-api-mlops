@@ -51,7 +51,7 @@ fenêtre temporelle au lieu de la remplacer.
 ## Valeurs provisoires — révisées
 
 | Paramètre | Valeur provisoire | Justification |
-|---|---|---|
+| --- | --- | --- |
 | Fenêtre de surveillance (rollback, `ops.deploy.surveiller`) | **120 s** (valeur par défaut du stub) | Détection rapide ; les tests d'acceptance appellent explicitement `fenetre_s=60` pour leurs scénarios simulés. |
 | Fenêtre du tableau de bord (`ops.dashboard.resume`) | **300 s** (valeur par défaut du stub) | Vue un peu plus large que le rollback, pour lisser l'affichage. |
 | Nombre minimal de mesures avant décision | **10** (valeur par défaut du stub et des tests) | En dessous, l'échantillon est trop petit pour distinguer dérive et bruit (anti-faux positifs) — même logique qu'avant, seuil abaissé car la fenêtre est courte. |

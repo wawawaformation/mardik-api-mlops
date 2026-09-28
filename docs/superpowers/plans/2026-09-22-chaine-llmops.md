@@ -39,10 +39,12 @@
 ### Task 1: `ops.deploy.prochaine_version`
 
 **Files:**
+
 - Modify: `ops/deploy.py` (add function after `_commit_courant`, add `import os` to the import block)
 - Test: `tests/unit/test_deploy.py` (new file)
 
 **Interfaces:**
+
 - Produces: `prochaine_version(bump: str = "patch", registry: Registry | None = None) -> str` — reads `registry.versions()` (already SemVer-sorted by `Registry`), bumps the highest one. Raises `ValueError` on an unknown `bump`. Used by Task 8 (`cd-main.yml`).
 
 - [ ] **Step 1: Write the failing tests**
@@ -131,11 +133,13 @@ git commit -m "feat(deploy): add prochaine_version for SemVer patch/minor/major 
 ### Task 2: `eval.run_eval.evaluer`
 
 **Files:**
+
 - Modify: `eval/run_eval.py` (implement `evaluer`, add imports)
 - Test: `tests/unit/test_run_eval.py` (new file)
 - Verify (not modify): `tests/acceptance/test_chaine.py::test_etiquetage_version_apres_gate`, `test_gate_evaluation_note_par_version`
 
 **Interfaces:**
+
 - Consumes: `app.api_v1.analyser_v1(texte: str, client: LLMClient, telemetry: Telemetry) -> ReponseAnalyseV1` (`.clauses: list[str]`); `app.api_v2.analyser_v2(texte: str, client: LLMClient, telemetry: Telemetry) -> ReponseAnalyseV2` (`.clauses: list[ClauseV2]`, each with `.type: str`); `app.llm_client.LLMClient(bundle)`, `LLMClient.cout_eur`; `app.telemetry.build_telemetry(span_exporter=..., metrics_path=...) -> Telemetry`, `Telemetry.metriques.lire() -> list[Mesure]` (`Mesure.cout_eur`); `charger_bundle`, `charger_attendus`, `_p95` (already defined in this file); `ops.registry.Registry`.
 - Produces: `evaluer(version, *, n_essais=None, seuil=0.75, latence_max_ms=8000.0, cout_max_eur=0.15, contrats=DOSSIER_CONTRATS, attendus=CHEMIN_ATTENDUS, registry=None, telemetry=None, sous_ensemble=None, historique=CHEMIN_HISTORIQUE) -> Rapport`. Used by Task 3 (`ops.deploy.publier`) and by `gate.yml` (Task 7) via `python -m eval.run_eval`.
 
@@ -342,10 +346,12 @@ git commit -m "feat(eval): implement the evaluation gate (recall per contract)"
 ### Task 3: `ops.deploy.publier`
 
 **Files:**
+
 - Modify: `ops/deploy.py` (implement `publier`)
 - Verify (not modify): `tests/acceptance/test_chaine.py::test_etiquetage_version_apres_gate`
 
 **Interfaces:**
+
 - Consumes: `eval.run_eval.evaluer` (Task 2), `ops.registry.Registry.etiqueter/journaliser`, `app.llm_client.Bundle.charger`.
 - Produces: `publier(version: str, *, bundle: str = "v2", commit: str | None = None, registry: Registry | None = None, seuil: float = 0.75, rapport: Any | None = None) -> dict[str, Any]` (the manifest). Raises `ErreurDeploiement` if the gate fails. Used by Task 8 (`cd-main.yml`).
 
@@ -409,11 +415,13 @@ git commit -m "feat(deploy): implement publier (gate then registry tag)"
 ### Task 4: `ops.deploy.deployer_canary`, `promouvoir`, `rollback`
 
 **Files:**
+
 - Modify: `ops/deploy.py` (implement the three functions, add `import os`)
 - Modify: `tests/unit/test_deploy.py` (add tests, created in Task 1)
 - Verify (not modify): the registry-only assertions inside `tests/acceptance/test_observabilite.py::test_promotion_canary_puis_totale` and `test_rollback_en_une_operation` (these tests stay red overall — they also exercise `app/gateway.py`, out of scope — but the `ops.deploy` calls inside them must not raise `NotImplementedError` any more)
 
 **Interfaces:**
+
 - Consumes: `ops.registry.Registry.definir_canary/ecrire_index/index/manifest/journaliser`.
 - Produces: `deployer_canary(version: str, pourcentage: int | None = None, registry: Registry | None = None) -> dict[str, Any]`; `promouvoir(version: str, registry: Registry | None = None) -> dict[str, Any]`; `rollback(registry: Registry | None = None, motif: str = "manuel") -> dict[str, Any]`. All return `registry.index()`. Not consumed elsewhere in this plan (chantier 2's `app/gateway.py` and `ops/deploy.py::surveiller` will consume them later, out of scope here).
 
@@ -568,11 +576,13 @@ git commit -m "feat(deploy): implement deployer_canary, promouvoir, rollback (re
 ### Task 5: `.github/workflows/ci.yml` + retire the old template
 
 **Files:**
+
 - Create: `.github/workflows/ci.yml`
 - Delete: `.github/workflows/llmops.yml`
 - Modify: `Makefile:52` (the `ci:` target's stale echo line)
 
 **Interfaces:**
+
 - Consumes: `uv run ruff check .`, `uv run pytest -q tests/unit tests/integration tests/acceptance` (identical to the current `make ci` steps).
 - Produces: nothing consumed by other tasks in this plan — `gate.yml` (Task 7) duplicates the same steps in its own `tests` job rather than calling this workflow, per the design (each workflow is self-contained, matching the QualiCheck reference).
 
@@ -667,9 +677,11 @@ git commit -m "ci: replace llmops.yml template with a dedicated ci.yml workflow"
 ### Task 6: `.github/workflows/revue.yml`
 
 **Files:**
+
 - Create: `.github/workflows/revue.yml`
 
 **Interfaces:**
+
 - Consumes: nothing from earlier tasks (pure git/GitHub tag automation).
 - Produces: the `revue-ok/<sha7>` tag on approval — consumed by Task 7's guard step and Task 8's guard step.
 
@@ -731,6 +743,7 @@ Expected: no output, exit code 0.
 - [ ] **Step 3: Self-review checklist (no automated test possible for a `pull_request_review`-triggered workflow without a real PR)**
 
 Confirm each item by reading the file back:
+
 - [ ] Trigger is `pull_request_review` / `types: [submitted]`, not `pull_request`.
 - [ ] The `if:` guard checks `review.state == 'approved'` (GitHub's actual field — not Gitea's `pull_request_review_approved`), the approver is `mardik-relecteur`, and the PR base branch is `main`.
 - [ ] The tag push step is idempotent (checks `git tag --points-at` before creating).
@@ -748,9 +761,11 @@ git commit -m "ci: add revue.yml to post revue-ok/<sha> on PR approval"
 ### Task 7: `.github/workflows/gate.yml`
 
 **Files:**
+
 - Create: `.github/workflows/gate.yml`
 
 **Interfaces:**
+
 - Consumes: `revue-ok/<sha>` tag (Task 6); `eval.run_eval.evaluer` via `python -m eval.run_eval` (Task 2); the `proxy`/`azure-adapter` docker-compose services (already `[FOURNI]`, see `docker-compose.yml:49-71`).
 - Produces: the `eval-ok/<sha7>` tag — consumed by Task 8's guard step. Also produces `eval/history.jsonl`, uploaded as a build artifact for inspection.
 
@@ -918,9 +933,11 @@ git commit -m "ci: add gate.yml — real-model evaluation gated by revue-ok, pos
 ### Task 8: `.github/workflows/cd-main.yml`
 
 **Files:**
+
 - Create: `.github/workflows/cd-main.yml`
 
 **Interfaces:**
+
 - Consumes: `revue-ok`/`eval-ok` tags (Tasks 6, 7); `ops.deploy.prochaine_version` (Task 1); `ops.deploy.publier`, `ops.deploy.deployer_canary` (Tasks 3, 4); `Dockerfile` (already `[FOURNI]`, builds the single shared image).
 - Produces: a `ghcr.io` image tag, a new entry in `ops/registry/`, and an updated `ops/registry/index.json` with a 10% canary — nothing else in this plan consumes these; they're the deliverable of chantier 1 point 3.
 

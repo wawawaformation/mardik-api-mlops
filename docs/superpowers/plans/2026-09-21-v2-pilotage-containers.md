@@ -30,7 +30,7 @@
 ## File Structure
 
 | Fichier | Rôle | Action |
-|---|---|---|
+| --- | --- | --- |
 | `app/main.py` | Fabriques d'application : `create_app()` (rôle complet) + `create_app_v2()` (rôle v2) | Modifier |
 | `tests/unit/test_fabrique_app_v2.py` | Tests de la fabrique `create_app_v2` et de la non-régression de `create_app` | Créer |
 | `ops/serveur_pilotage.py` | Squelette FastAPI du serveur de pilotage : 6 routes du contrat gelé + `/health` | Créer |
@@ -45,10 +45,12 @@
 ### Task 1: Fabrique `create_app_v2()` (rôle v2)
 
 **Files:**
+
 - Modify: `app/main.py` (fichier entier, 45 lignes)
 - Test: `tests/unit/test_fabrique_app_v2.py` (créer)
 
 **Interfaces:**
+
 - Consumes: `app.api_v1.router`, `app.api_v2.router`, `app.gateway.router`, `app.telemetry.build_default_telemetry` (tous existants, inchangés).
 - Produces:
   - `app.main.create_app() -> FastAPI` — inchangé : `/v1/analyse`, `/v2/analyse`, `/analyse`, `/gateway/etat`, `/health`.
@@ -235,11 +237,13 @@ git add app/main.py tests/unit/test_fabrique_app_v2.py
 ### Task 2: Squelette du serveur de pilotage (`ops/serveur_pilotage.py`)
 
 **Files:**
+
 - Create: `ops/serveur_pilotage.py`
 - Test: `tests/unit/test_serveur_pilotage.py` (créer)
 - Read-only reference: `conception_figee/pilotage/openapi-pilotage.json` (gelé — **ne jamais écrire dedans**)
 
 **Interfaces:**
+
 - Consumes: rien du projet (aucune dépendance à `app/` ni à `ops/registry`, `ops/dashboard`). FastAPI + Pydantic uniquement.
 - Produces:
   - `ops.serveur_pilotage.creer_app_pilotage() -> FastAPI` — fabrique, pour les tests.
@@ -249,7 +253,7 @@ git add app/main.py tests/unit/test_fabrique_app_v2.py
 **Schémas repris du contrat gelé** (`openapi-pilotage.json`, `components.schemas`) — à reproduire fidèlement :
 
 | Schéma | Champs requis | Champs optionnels | Énumérations |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `AjustementSeuil` | `seuil` (string), `declencheur` (string) | — | `declencheur` ∈ {`auto`, `humain`} |
 | `Promotion` | `cible_pct` (integer) | `declencheur` (string) | `cible_pct` ∈ {50, 100} ; `declencheur` ∈ {`auto`, `humain`} |
 | `Rollback` | `declencheur` (string) | `signal` (string), `valeur` (string) | `declencheur` ∈ {`auto`, `humain`} |
@@ -523,9 +527,11 @@ git add ops/serveur_pilotage.py tests/unit/test_serveur_pilotage.py
 ### Task 3: Services `v2` et `serveur_pilotage` dans le docker-compose
 
 **Files:**
+
 - Modify: `docker-compose.yml` (ajout de deux services ; **aucun service existant n'est touché**)
 
 **Interfaces:**
+
 - Consumes: `app.main:create_app_v2` (Task 1) et `ops.serveur_pilotage:app` (Task 2).
 - Produces: deux services healthy, `v2` sur `localhost:8001` et `serveur_pilotage` sur `localhost:8002`, consommés par la vérification réelle de Task 4.
 
@@ -562,6 +568,7 @@ Insérer ce bloc **après** le service `app` (juste avant le commentaire `# Le p
 ```
 
 Deux points à ne pas « corriger » par mimétisme avec le service `app` :
+
 - **pas de `extra_hosts`** : tous les appels LLM passent par le proxy (`LLM_PROXY_URL`, voir `app/llm_client.py`, attribut `proxy_url`), et c'est le service `proxy` qui porte `host.docker.internal`. Inutile ici.
 - **`METRICS_PATH` différent** : c'est la décision de la spec (§Décisions, « Métriques de `v2` »), pas une faute de copie.
 
@@ -611,10 +618,12 @@ git add docker-compose.yml
 ### Task 4: `ops/metrics_v2.jsonl` — `.gitignore` et `make clean`
 
 **Files:**
+
 - Modify: `.gitignore` (section « Généré à l'exécution », après la ligne `ops/metrics.jsonl`)
 - Modify: `Makefile` (cible `clean`)
 
 **Interfaces:**
+
 - Consumes: le chemin `ops/metrics_v2.jsonl` introduit par le service `v2` en Task 3.
 - Produces: rien qu'une autre tâche consomme.
 
@@ -661,6 +670,7 @@ git add .gitignore Makefile
 **Files:** aucun fichier modifié — cette tâche exécute et constate.
 
 **Interfaces:**
+
 - Consumes: les services de Task 3.
 - Produces: la preuve que le critère §Vérification 4 de la spec est tenu.
 
@@ -687,7 +697,8 @@ curl -s -o /dev/null -w "v1=%{http_code}\n" -X POST localhost:8001/v1/analyse \
 ```
 
 Expected:
-```
+
+```text
 health=200
 v1=404
 ```
@@ -706,7 +717,8 @@ curl -s -o /dev/null -w "rollback_invalide=%{http_code}\n" -X POST localhost:800
 ```
 
 Expected:
-```
+
+```text
 health=200
 journal=501
 rollback_valide=501
@@ -726,11 +738,13 @@ curl -s -o /dev/null -w "gateway=%{http_code}\n" localhost:8000/gateway/etat
 ```
 
 Expected:
-```
+
+```text
 health=200
 v1=200
 gateway=501
 ```
+
 C'est le contrôle le plus important du plan : il prouve que la contrainte « v1 jamais interrompue » (`docs/spec-v2.md` §3) tient après la modification de `app/main.py`. (`v1=503` = fournisseur LLM injoignable, voir le pré-requis — ce n'est pas une régression, mais l'étape doit être rejouée avant de clore le plan.)
 
 - [ ] **Step 6: Check that the two metrics journals are really separate**
@@ -760,6 +774,7 @@ Cette tâche ne modifie aucun fichier suivi par git. Si l'un des contrôles a r�
 ### Task 6: Documentation et demande d'accord pour committer
 
 **Files:**
+
 - Modify: `CHANGELOG.md` (nouvelle entrée en tête)
 - Modify: `TODO.md` (sections « Chantier 2 — Pilotage » et « Environnement »)
 - Modify: `MEMORY.md` (section « État de l'implémentation » ou une nouvelle section dédiée)
@@ -914,6 +929,7 @@ Insérer, après la ligne 82 (`n'est pas l'architecture de déploiement canary c
 
 Run: `MOCK=on uv run pytest -q && uv run ruff check . && docker compose config --quiet && git status --short`
 Expected :
+
 - `7 failed, 54 passed`
 - `All checks passed!`
 - aucune sortie de `docker compose config --quiet`
@@ -972,7 +988,7 @@ Si l'utilisateur refuse ou demande des changements, ne rien committer et appliqu
 ## Récapitulatif d'exécution
 
 | Tâche | Livrable | Vérification |
-|---|---|---|
+| --- | --- | --- |
 | 1 | `create_app_v2()` + 5 tests | `5 passed`, puis `7 failed, 42 passed` |
 | 2 | `ops/serveur_pilotage.py` + 12 tests | `12 passed`, puis `7 failed, 54 passed` |
 | 3 | 2 services compose | `docker compose config --quiet` muet, ports 8001/8002 |

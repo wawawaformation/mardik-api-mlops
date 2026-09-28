@@ -53,9 +53,11 @@ Non automatisable. Contrôle manuel : tenter un `git push --force` sur une branc
 ### Task 1: Garde « lot A vert » dans `revue.yml` (D2)
 
 **Files:**
+
 - Modify: `.github/workflows/revue.yml` (nouvelle étape avant la pose du tag ; embarque aussi la correction non committée `base.ref == 'dev'`)
 
 **Interfaces:**
+
 - Consomme : l'API GitHub `repos/{owner}/{repo}/actions/workflows/ci.yml/runs?head_sha=…` (donc le nom de fichier `ci.yml` — le renommer casserait ce garde).
 - Produit : un `revue-ok/<sha7>` qui n'existe que si le lot A a conclu `success` sur ce SHA. Consommé par le garde de `gate.yml` (inchangé).
 
@@ -138,9 +140,11 @@ Corps du message (français) : rappeler l'écart 1 (cible `dev`) et I3 (garde lo
 ### Task 2: Workflow `alerte-eval.yml` (D3)
 
 **Files:**
+
 - Create: `.github/workflows/alerte-eval.yml`
 
 **Interfaces:**
+
 - Consomme : `python -m eval.run_eval --version v2 --seuil 0.75` (CLI déjà en place, `eval/run_eval.py::main`) ; les services `proxy` et `azure-adapter` de `docker-compose.yml` ; les secrets Azure déjà enregistrés.
 - Produit : **rien de consommable** — aucun tag, aucun artefact attendu par une autre tâche. C'est le point : un signal, pas une preuve.
 
@@ -217,6 +221,7 @@ Expected: aucune sortie, code 0.
 ```bash
 ls models/*/config.yaml app/llm_client.py && ls -d app/pipeline eval
 ```
+
 Expected: les quatre chemins existent. Un filtre `paths:` pointant à côté ne déclencherait jamais rien — et l'échec serait silencieux.
 
 - [ ] **Step 4: Vérifier la commande d'évaluation hors CI, en mocké**
@@ -244,6 +249,7 @@ git commit -m "ci: add alerte-eval.yml — real evaluation as a lot A signal, no
 ### Task 3: Réviser `docs/exploitation.md` § 3 — topologie et fusions (D1)
 
 **Files:**
+
 - Modify: `docs/exploitation.md` (§ 3 « Chaîne de livraison »)
 
 **Interfaces:** aucune. Documentation d'exploitation, lue par l'utilisateur au moment de livrer.
@@ -292,6 +298,7 @@ git commit -m "docs(exploitation): describe the feature/dev/main chain and its t
 ### Task 4: Inscrire la décision sur les TA mockés (D4) — **bloquée par la Tâche 0**
 
 **Files:**
+
 - Modify: `docs/exploitation.md` (§ 3)
 - Modify: `.github/workflows/gate.yml` (commentaire uniquement)
 - Modify (option 2 seulement): `.github/workflows/ci.yml`
@@ -325,6 +332,7 @@ Option 2 : `ci: move mocked acceptance tests to the gate only`
 ### Task 5: Mettre à jour `TODO.md`, `CHANGELOG.md`, `MEMORY.md`
 
 **Files:**
+
 - Modify: `TODO.md`, `CHANGELOG.md`, `MEMORY.md`
 
 - [ ] **Step 1: `TODO.md`**

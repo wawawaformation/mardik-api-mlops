@@ -44,7 +44,7 @@ plus tôt.
 ## Les trois lots
 
 | Lot | Contenu | Rôle | Coût |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **A** | Lint + TU + TI (LLM mocké) | informer | secondes |
 | **B** | Revue de code | **prouver** | attention humaine |
 | **C** | Gate : tests mockés + évaluation réelle | **prouver** | appels LLM facturés |
@@ -54,7 +54,7 @@ plus tôt.
 ## La chaîne
 
 | # | Où | Déclencheur | Ce qui se passe | Résultat |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 1 | `feature/x` | push | **Lot A** | vert / rouge |
 | 2 | PR `feature/x → dev` | approbation | **Lot B** | `revue-ok/<sha7>` |
 | 3 | `dev` | manuel, quand on veut | **Lot C** | `eval-ok/<sha7>` |
@@ -147,7 +147,7 @@ modifiés.
 Ce qui influence l'éval dans ce dépôt :
 
 | Chemin | Pourquoi |
-|---|---|
+| --- | --- |
 | `models/*/config.yaml` | prompt, modèle, paramètres, schéma de sortie, stratégie |
 | `app/pipeline/**` | découpage en sections et consolidation — change ce qu'on envoie au modèle |
 | `app/llm_client.py` | chargement du bundle et appel |
@@ -186,7 +186,7 @@ tôt qu'on a cassé la qualité — mais ça se voit sur la facture.
 Constat, pas plan d'action.
 
 | # | Écart | Intention concernée |
-|---|---|---|
+| --- | --- | --- |
 | 1 | `revue.yml` exige `base.ref == 'main'` ; la revue doit se faire sur une PR `feature/x → dev` | chaîne, étape 2 |
 | 2 | `revue.yml` pose `revue-ok` sans vérifier que le lot A est vert sur ce SHA — on peut approuver du code cassé | I3 |
 | 3 | L'évaluation conditionnelle du lot A n'existe pas | I6 |

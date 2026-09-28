@@ -11,7 +11,7 @@
 MVP v2 (Must) :
 
 | Élément |
-|---|
+| --- |
 | Traiter les contrats longs sans perdre les clauses en fin de document |
 | Produire un score de confiance par clause |
 | Produire un score de confiance global |
@@ -126,7 +126,7 @@ pas de duplication ici, juste le renvoi et un résumé d'une ligne :
 **`test_chaine.py`**
 
 | Test | Couvre |
-|---|---|
+| --- | --- |
 | `test_contrat_v2_long_analyse_sans_troncature` | v2 sur contrat long : contrat respecté, clauses de fin trouvées (là où v1 tronque) |
 | `test_erreurs_explicites_jamais_de_500` | v2 : erreurs toujours explicites (4xx/5xx + detail), jamais de 500 brut |
 | `test_client_v1_fonctionne` | client historique inchangé, avant/pendant/après livraison v2 |
@@ -136,7 +136,7 @@ pas de duplication ici, juste le renvoi et un résumé d'une ligne :
 **`test_observabilite.py`**
 
 | Test | Couvre |
-|---|---|
+| --- | --- |
 | `test_rollback_en_une_operation` | rollback v2→v1 en une opération, sans redémarrage, client v1 continue de fonctionner |
 | `test_promotion_canary_puis_totale` | canary 30 % (mélange v1/v2, en-tête `X-Mardik-Version`) puis promotion 100 %, chaque étape journalisée |
 | `test_evaluation_enrichie_latence_et_cout` | gate d'éval : rapport inclut P95 et coût moyen, échoue si contrainte non tenue |

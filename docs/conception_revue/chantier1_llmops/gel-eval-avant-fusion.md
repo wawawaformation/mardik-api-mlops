@@ -24,7 +24,7 @@ PR possible, `dev → main`, et c'est sur elle que se fait la revue.
 La chaîne devient :
 
 | # | Où | Déclencheur | Ce qui se passe | Résultat |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 1 | `feature/x` | push | lot A — lint + TU + TI (mockés) | vert / rouge |
 | 2 | PR `feature/x → dev` | approbation | lot B — revue de code | `revue-ok/<sha7>` |
 | 3 | `dev` | manuel | lot C — gate (tests mockés + évaluation réelle) | `eval-ok/<sha7>` |
@@ -80,7 +80,7 @@ automatiquement à chaque push. »
 **quand le push touche un chemin capable de déplacer la note** :
 
 | Chemin | Pourquoi |
-|---|---|
+| --- | --- |
 | `models/*/config.yaml` | prompt, modèle, paramètres, schéma de sortie, stratégie |
 | `app/pipeline/**` | découpage en sections et consolidation |
 | `app/llm_client.py` | chargement du bundle et appel |
@@ -145,7 +145,7 @@ créé sur `main` alors que la conception impose le fast-forward strict.
 
 `cd-main.yml` a refusé de déployer :
 
-```
+```text
 [refus] aucun revue-ok/* sur aec3112...
 ```
 

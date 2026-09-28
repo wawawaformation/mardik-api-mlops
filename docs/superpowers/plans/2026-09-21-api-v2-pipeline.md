@@ -24,10 +24,12 @@
 ### Task 1: Bundle v2 (`models/v2/config.yaml`)
 
 **Files:**
+
 - Modify: `models/v2/config.yaml`
 - Test: `tests/unit/test_bundle_v2.py`
 
 **Interfaces:**
+
 - Produces: un bundle chargeable par `Bundle.charger("v2")` avec `strategie == "map_reduce_clauses"`, `schema_sortie` non vide (dict), `parametres["contexte_max_caracteres"] == 6000`. Toutes les tâches suivantes en dépendent (le prompt système, le schéma JSON, la taille de section).
 
 - [ ] **Step 1: Write the failing test**
@@ -128,12 +130,14 @@ git commit -m "feat(v2): define the v2 bundle (map-reduce strategy, JSON schema)
 ### Task 2: Découpage (`app/pipeline/decoupage.py`)
 
 **Files:**
+
 - Create: `tests/unit/__init__.py` (vide)
 - Create: `tests/unit/pipeline/__init__.py` (vide)
 - Modify: `app/pipeline/decoupage.py`
 - Test: `tests/unit/pipeline/test_decoupage.py`
 
 **Interfaces:**
+
 - Consumes: rien (fonction pure, pas de dépendance sur les autres tâches).
 - Produces: `decouper(texte: str, taille_max: int = 6000) -> list[Section]` où `Section(indice: int, titre: str, texte: str)`. Consommé par Task 5 (orchestration).
 - **Trois niveaux implémentés** (contrairement à la v1 du plan qui n'en avait que deux) : découpage structurel (articles/préambule/annexes) → **regroupement des blocs consécutifs jusqu'à `taille_max`** (repli « paragraphes » de `decoupage-chunking.md` : c'est lui qui tient le budget d'appels LLM, pas un cas limite) → repli taille fixe avec chevauchement pour un bloc qui dépasse `taille_max` à lui seul.
@@ -338,10 +342,12 @@ git commit -m "feat(v2): implement structural + grouped + size-based decoupage w
 ### Task 3: Score de confiance (`app/pipeline/confiance.py`)
 
 **Files:**
+
 - Modify: `app/pipeline/confiance.py`
 - Test: `tests/unit/pipeline/test_confiance.py`
 
 **Interfaces:**
+
 - Consumes: `Clause` dataclass déjà définie dans `app/pipeline/confiance.py` (inchangée : `type`, `extrait`, `confiance_llm`, `sections`, `confiance`).
 - Produces: `scorer(clauses: list[Clause], nb_sections: int, texte: str = "") -> tuple[list[Clause], float]`. **Écart assumé par rapport à la signature du stub** (`scorer(clauses, texte)`) : la formule actée (`score-confiance.md`) a besoin du nombre total de sections du document, que `texte` seul ne donne pas — `nb_sections` est ajouté. `texte` est **conservé mais inutilisé** : la formule est implémentée telle quelle (décision utilisateur, pas de second signal de corroboration ajouté maintenant — le biais connu de cette formule sur les contrats bien structurés est assumé et sera traité en calibration au chantier 2, pas ici). Aucun test fourni n'appelle `scorer` directement (seul `app/api_v2.py`, notre propre code, l'appelle) : changement sûr. Consommé par Task 6.
 
@@ -432,10 +438,12 @@ git commit -m "feat(v2): implement composite confidence score (llm x corroborati
 ### Task 4: Consolidation (`app/pipeline/consolidation.py`)
 
 **Files:**
+
 - Modify: `app/pipeline/consolidation.py`
 - Test: `tests/unit/pipeline/test_consolidation.py`
 
 **Interfaces:**
+
 - Consumes: `Clause` (Task 3, `app/pipeline/confiance.py`).
 - Produces: `consolider(par_section: list[list[Clause]]) -> list[Clause]`. Consommé par Task 5.
 
@@ -536,10 +544,12 @@ git commit -m "feat(v2): implement cross-section clause deduplication"
 ### Task 5: Extraction (`app/pipeline/extraction.py`)
 
 **Files:**
+
 - Modify: `app/pipeline/extraction.py`
 - Test: `tests/unit/pipeline/test_extraction.py`
 
 **Interfaces:**
+
 - Consumes: `Section` (Task 2), `Clause` (Task 3), `LLMClient`/`ReponseLLM`/`ErreurLLM`/`TYPES_CLAUSES` (`app/llm_client.py`, fourni).
 - Produces: `extraire(section: Section, client: LLMClient) -> tuple[list[Clause], ReponseLLM]`. Consommé par Task 6.
 
@@ -671,10 +681,12 @@ git commit -m "feat(v2): implement per-section LLM extraction with JSON validati
 ### Task 6: Orchestration (`app/api_v2.py`)
 
 **Files:**
+
 - Modify: `app/api_v2.py`
 - Test: `tests/unit/test_api_v2_analyser.py`
 
 **Interfaces:**
+
 - Consumes: `decouper` (Task 2), `scorer` (Task 3), `consolider` (Task 4), `extraire` (Task 5), `Mesure`/`Telemetry` (`app/telemetry.py`, fourni), `ErreurLLM` (`app/llm_client.py`, fourni).
 - Produces: `analyser_v2(texte: str, client: LLMClient, telemetry: Telemetry) -> ReponseAnalyseV2` (déjà déclarée dans le stub, signature inchangée) et la route `POST /v2/analyse` avec le 413.
 
@@ -884,6 +896,7 @@ git commit -m "feat(v2): orchestrate the map-reduce pipeline behind POST /v2/ana
 ### Task 7: Full validation (acceptance + no regression)
 
 **Files:**
+
 - Modify: `Makefile` (`ci:` target — add `tests/unit`, currently only runs `tests/integration` + `tests/acceptance`; `testpaths = ["tests"]` in `pyproject.toml` already makes plain `make test` pick up `tests/unit` automatically, `make ci` does not).
 
 **Interfaces:** none.

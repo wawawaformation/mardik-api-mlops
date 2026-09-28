@@ -10,10 +10,12 @@
 - [ ] Aucun autre service n'écoute sur les ports **8090** (Caddy) et
       **8503** (`client_web`) — vérifier avec `ss -ltnp | grep -E ":8090|:8503"`
 - [ ] Stack démarrée :
+
   ```bash
   docker compose up -d --build
   docker compose ps
   ```
+
   Attendu : tous les containers `Up`, `serveur_pilotage` et `v2` en
   `(healthy)`.
 

@@ -130,6 +130,7 @@ branche complète). `app/pipeline/decoupage.py::decouper`,
 
 Décisions actées pendant l'implémentation, non documentées ailleurs — détail
 dans `CHANGELOG.md` (entrée du jour) :
+
 - `seed: 0` fixé dans le bundle v2 (`models/v2/config.yaml`), pour un gate
   d'évaluation stable.
 - `scorer()` a gagné un paramètre `nb_sections: int` (la formule de
@@ -194,7 +195,7 @@ avec le code réel, pas seulement la cible) :
 (v1, v2, gateway) derrière Caddy. **Partiellement en place** :
 
 | Service compose | Port hôte → container | Rôle |
-|---|---|---|
+| --- | --- | --- |
 | `app` | 8000 → 8000 | complet (v1 + v2 + gateway), confort de dev — inchangé |
 | `v2` | 8001 → 8000 | `/v2/analyse` + `/health` (`create_app_v2`) |
 | `serveur_pilotage` | 8002 → 8000 | squelette `/pilotage/*` (501) + `/health` |
@@ -496,7 +497,7 @@ hypothèse, plutôt que de deviner à partir du symptôme rapporté.
 ## Prérequis GitHub — état au 2026-09-23 (fin de journée)
 
 | Prérequis | État |
-|---|---|
+| --- | --- |
 | Compte de revue dédié | ✅ `connarddu16-design`, collaborateur `write` |
 | `revue.yml` pointé sur ce login | ✅ (gardait `mardik-relecteur`, jamais enregistré) |
 | Secrets Azure (4) | ✅ poussés via `gh secret set` depuis `.env` |

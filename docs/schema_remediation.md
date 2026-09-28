@@ -4,7 +4,7 @@ Au brief de remédiation (« Mardik, production aveugle »), l'application a ét
 instrumentée. Ces briques sont **fournies fonctionnelles** : on construit
 dessus, on ne les refait pas.
 
-```
+```text
                  requête HTTP
                       │
    ┌──────────────────▼──────────────────┐
@@ -19,7 +19,7 @@ dessus, on ne les refait pas.
 ## Les trois signaux (`app/telemetry.py`)
 
 | Signal | Où | Comment le lire |
-|---|---|---|
+| --- | --- | --- |
 | **Traces** (OpenTelemetry) | spans `analyse.requete` → `llm.appel`, attributs `mardik.version`, `mardik.tronque`, `llm.latence_ms`, `llm.tokens` | en local : exportées sur la console en JSON (`OTEL_TRACES=console`) ; dans les tests : `InMemorySpanExporter` (fixture `span_exporter`) |
 | **Logs structurés** (structlog, JSON) | événements `analyse.terminee`, `analyse.echec` avec `version`, `latence_ms`, `clauses`, `tronque` | `docker compose logs app` ; dans les tests : `structlog.testing.capture_logs()` |
 | **Métriques** (`MetricsStore`) | une ligne JSON par requête dans `ops/metrics.jsonl` : `ts, version, route, latence_ms, erreur, score, cout_eur, appels_llm, tokens, tronque` | `MetricsStore().lire(depuis_s=300)` — c'est la source du tableau de bord et de la surveillance |
@@ -50,7 +50,7 @@ Le proxy (`ops/drift_proxy.py`) dégrade le trafic **entre** l'app et le
 modèle. Vu depuis les métriques :
 
 | `DRIFT=` | ce qu'on observe dans `metrics.jsonl` |
-|---|---|
+| --- | --- |
 | `latence` | `latence_ms` ×4 sur la version qui reçoit le trafic |
 | `erreurs` | `erreur: true` sur ~10 % des lignes |
 | `score` | `score` qui s'effondre vers 0,5 (uniquement sur les versions qui produisent un score) |

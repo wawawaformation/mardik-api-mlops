@@ -13,7 +13,7 @@ réversible à tout instant (rollback). La v1 reste disponible en permanence.
 
 ## Paliers de trafic
 
-```
+```text
 10 % → 50 % → 100 %
 ```
 

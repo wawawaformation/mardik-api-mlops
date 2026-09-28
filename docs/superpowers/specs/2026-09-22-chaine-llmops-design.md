@@ -32,7 +32,7 @@ encore : `.github/workflows/llmops.yml` est un squelette d'apprentissage
 ## Décisions
 
 | Sujet | Décision |
-|---|---|
+| --- | --- |
 | Formule de la note (`eval/run_eval.py`) | **Rappel** par contrat, tel que documenté dans le stub — pas le micro-F1 scindé de la conception (écart, voir plus bas) |
 | Effet de `deployer_canary`/`promouvoir`/`rollback` | **Métadonnée seule** dans `ops/registry/index.json` — aucun routage réel (confirmé par le code fourni `ops/registry/__init__.py`) |
 | Automatisation du CD sur `main` | Jusqu'au **canary 10 %** (`publier` + `deployer_canary(10)`) ; promotion/rollback restent des commandes manuelles |

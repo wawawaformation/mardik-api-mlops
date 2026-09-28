@@ -1,3 +1,5 @@
+# Script de démo — la chaîne CI/CD (de `feature/x` au canary)
+
 ## 1. Push sur `feature/x` — le lot A (`ci.yml`)
 
 **Faire** : créer la branche et un changement **anodin** (hors chemins

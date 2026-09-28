@@ -1,0 +1,14 @@
+// Conventions du projet :
+// - pas de limite de longueur de ligne (MD013), sans intérêt pour un rendu
+//   Markdown ou Pandoc ;
+// - tabulations permises dans les blocs de code (MD010) : une recette
+//   Makefile en exige ;
+// - docs/besoin_client.md est un document fourni par le client : on ne le
+//   reformate pas.
+{
+  "config": {
+    "MD013": false,
+    "MD010": { "code_blocks": false }
+  },
+  "ignores": [".venv/**", "node_modules/**", "docs/besoin_client.md"]
+}

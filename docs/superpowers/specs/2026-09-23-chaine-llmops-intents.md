@@ -28,7 +28,7 @@
 La chaîne visée (`intents.md`, § « La chaîne ») :
 
 | # | Où | Déclencheur | Ce qui se passe | Résultat |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 1 | `feature/x` | push | **Lot A** — lint + TU + TI mockés | vert / rouge |
 | 2 | PR `feature/x → dev` | approbation | **Lot B** — revue | `revue-ok/<sha7>` |
 | 3 | `dev` | manuel | **Lot C** — gate (mocké + éval réelle) | `eval-ok/<sha7>` |
@@ -70,7 +70,7 @@ Or **GitHub n'offre aucune option de fusion fast-forward dans l'interface de
 PR**. Les trois boutons disponibles sont :
 
 | Bouton GitHub | Effet sur le SHA | Verdict |
-|---|---|---|
+| --- | --- | --- |
 | *Create a merge commit* | crée un commit de fusion (nouveau SHA de tête) | interdit |
 | *Squash and merge* | écrase l'historique en un commit neuf | interdit |
 | *Rebase and merge* | réécrit chaque commit (nouveaux SHA) | interdit |
@@ -100,7 +100,7 @@ fabriquer un merge commit silencieusement.
 Sur `dev` et sur `main`, via les *rulesets* GitHub :
 
 | Règle | Pourquoi |
-|---|---|
+| --- | --- |
 | Bloquer les force-push | un SHA déjà prouvé ne doit pas pouvoir être réécrit |
 | Bloquer la suppression de branche | idem |
 | *Require linear history* | interdit les merge commits poussés à la main |
@@ -163,7 +163,7 @@ CI, qui doit déclencher la pose du tag.
 Il ne reste donc que deux mécanismes praticables :
 
 | Mécanisme | Coût | Retenu ? |
-|---|---|---|
+| --- | --- | --- |
 | Interroger l'API sur le SHA | 1 appel API, 0 s de calcul | **oui** |
 | Rejouer le lot A dans `revue.yml` | ~1 min de runner, dupliqué | non |
 
@@ -340,7 +340,7 @@ Points de conception :
 ### Les deux options
 
 | | Option 1 — TA dans le lot A **et** le lot C (état actuel) | Option 2 — TA dans le lot C seul |
-|---|---|---|
+| --- | --- | --- |
 | Détection d'une régression d'acceptance | à chaque push, en secondes | seulement au gate, après la revue |
 | Duplication | oui, une ligne de commande dans deux fichiers | non |
 | Durée du lot A | + quelques secondes | inchangée |
