@@ -2,6 +2,23 @@
 
 > Tracé horodaté, ordre inverse (plus récent en premier).
 
+## 2026-10-01 (livraison : PR #11 fusionnée dans `dev`, réconciliation avec `main`)
+
+- **PR #11 `feature/demo-ci` → `dev`** : approuvée par le compte de revue
+  (`revue-ok/a710ff2`), fusion fast-forward, gate passé
+  (`eval-ok/a710ff2` — note 1,000, P95 5,5 s, coût moyen 0,0165 €).
+- **`dev → main` bloqué** : `main` porte `612c67d` (« publish v2.0.3 »,
+  commité par `cd-main.yml` le 2026-09-24), absent de `dev`. Les rulesets
+  (*linear history*, pas de force-push, aucun contournement) interdisent
+  à la fois le commit de fusion et la réécriture de `dev`.
+- **Réconciliation** (décision de l'utilisateur) : commit de fusion
+  `origin/main` → `feature/reconcile-main`, PR → `dev`, nouvelle revue et
+  nouveau gate sur ce SHA, *linear history* désactivée le temps des pushes
+  `dev`/`main` puis rétablie. Même geste que le 2026-09-24 (`c245346`).
+- **Parade documentée** (`docs/exploitation.md` § 3) : après chaque
+  livraison, `dev` ← `main` en fast-forward. Correction de la cause
+  (commit de registre sur `main` seul) notée au `TODO.md`, hors rendu.
+
 ## 2026-10-01 (réorganisation de la collection Bruno)
 
 - **`bruno/caddy/` déplacé dans `bruno/demo-cto-caddy/caddy/`** (requêtes

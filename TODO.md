@@ -2,6 +2,17 @@
 
 ## Rendu — reste à faire (état au 2026-09-28)
 
+- [ ] **Réconcilier `main` et `dev` (2026-10-01)** : `main` porte
+      `612c67d` (registre v2.0.3, commité par `cd-main.yml`) absent de
+      `dev` → `dev → main` impossible en fast-forward. Commit de fusion sur
+      `feature/reconcile-main` → PR → `dev` (revue + gate), puis `main`,
+      *linear history* désactivée le temps des deux pushes puis rétablie
+- [ ] Après la livraison : `dev` ← `main` en fast-forward (commit de
+      registre de la nouvelle version), voir `docs/exploitation.md` § 3
+- [ ] Plus tard (hors rendu) : supprimer la cause — `cd-main.yml` ne
+      devrait plus commiter sur `main` seul (pousser aussi le commit de
+      registre sur `dev`, ou tenir le registre hors de git)
+
 > Rendu écrit, sans oral. Détail : `../livrables/checklist.md` et
 > `../livrables/README.md` (hors dépôt).
 
@@ -17,7 +28,8 @@
       les docs qui citent encore `bruno/caddy/` (2026-10-01)
 - [x] Décider du sort de la modif locale de `.github/workflows/alerte-eval.yml`
       (2026-10-01 : gardée — alerte étendue à `fix/**`, voir `CHANGELOG.md`)
-- [ ] Pousser `feature/demo-ci` (36 commits ; déclenche l'éval payante)
+- [x] Pousser `feature/demo-ci` (40 commits ; CI et alerte-eval au vert,
+      2026-10-01)
 - [ ] PR `feature/demo-ci` → `dev`, puis `dev` → `main` : `ci`, `revue`,
       `gate`, `cd-main` au vert
 - [ ] Assembler le rendu : lien GitHub (`main`), `livrables/README.md`,
