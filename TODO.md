@@ -5,11 +5,13 @@
 > Rendu écrit, sans oral. Détail : `../livrables/checklist.md` et
 > `../livrables/README.md` (hors dépôt).
 
-- [ ] Vérifier dans un vrai navigateur l'histogramme du score
-      (`client_web/index.html`, contrôlé seulement par relecture et
-      `node --check`)
-- [ ] Vérifier la boucle d'enrichissement sur la stack réelle : analyse à
+- [x] Vérifier dans un vrai navigateur l'histogramme du score
+      (2026-10-01, Chromium headless via Caddy `:8090`, rendu conforme)
+- [x] Vérifier la boucle d'enrichissement sur la stack réelle : analyse à
       faible score → `GET /pilotage/enrichissement` → `POST` de validation
+      (2026-10-01, `MOCK=on`, voir `CHANGELOG.md`)
+- [x] Revérifier `uv run pytest -q` (144 verts) et `ruff check` (propre)
+      (2026-10-01)
 - [ ] Committer les changements Bruno de l'utilisateur (dossier `caddy`
       déplacé dans `demo-cto-caddy`, fichiers `folder.bru`) et mettre à jour
       les docs qui citent encore `bruno/caddy/`

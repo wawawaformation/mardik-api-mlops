@@ -2,6 +2,26 @@
 
 > Tracé horodaté, ordre inverse (plus récent en premier).
 
+## 2026-10-01 (vérifications avant livraison)
+
+Aucune modification de code. Stack lancée avec `docker compose` et un
+override hors dépôt forçant `MOCK=on` (aucun appel Azure), puis arrêtée ;
+`eval/` et `ops/` restaurés à l'identique après le test (sauvegarde/restauration).
+
+- **Tests** : `uv run pytest -q` → 144 verts ; `uv run ruff check` propre.
+- **Boucle d'enrichissement sur la stack réelle** : contrat long
+  (`eval/contrats/c12.txt` + email/montant) sur `POST /v2/analyse` → score
+  0,0 → cas capturé et pseudonymisé (`[EMAIL]`, `[MONTANT]`) →
+  visible dans `GET /pilotage/enrichissement` → `POST
+  /pilotage/enrichissement/{cas_id}` → 201, contrat versé dans
+  `eval/contrats/`, ligne `source: "production"` dans `attendus.jsonl`,
+  événement `enrichissement` (`declencheur: humain`) au journal, file
+  vidée ; un second `POST` sur le même cas → 404.
+- **Histogramme du score dans un navigateur** : Chromium headless sur
+  `http://localhost:8090/` (client servi par Caddy) — tranches de 0,2,
+  effectifs affichés, hauteurs proportionnelles, tranche sous le seuil en
+  rouge, alerte « zone à risque » affichée (33,3 % > 20 %).
+
 ## 2026-09-28 (préparation du rendu — lint Markdown, note de rendu)
 
 - **Lint Markdown de tout le dépôt** (`811bdc6`) : `markdownlint-cli2` → 0
