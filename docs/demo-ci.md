@@ -23,7 +23,7 @@ trois niveaux de tests en `MOCK=on`. Permissions : lecture seule.
 
 ## Variante — l'alerte d'évaluation (`alerte-eval.yml`)
 
-**Les 4 chemins sensibles** qui déclenchent ce workflow (sur `feature/**`) :
+**Les 4 chemins sensibles** qui déclenchent ce workflow (sur `feature/**` et `fix/**`) :
 
 | Chemin                 | Ce que c'est                                                                                                   | Pourquoi il est sensible                                                          |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |

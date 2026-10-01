@@ -2,6 +2,15 @@
 
 > Tracé horodaté, ordre inverse (plus récent en premier).
 
+## 2026-10-01 (alerte d'évaluation étendue aux branches `fix/**`)
+
+- **`alerte-eval.yml`** se déclenche aussi sur `fix/**` (en plus de
+  `feature/**`) : un correctif du prompt ou du pipeline déplace la note
+  autant qu'une fonctionnalité. Lève, pour `fix/`, la limite assumée par
+  la spec du 2026-09-23 (« une branche de travail qui ne s'appelle pas
+  `feature/…` n'a pas d'alerte »). Docs alignées : `docs/exploitation.md`,
+  `docs/demo-ci.md`, `MEMORY.md`. Aucun effet sur `feature/demo-ci`.
+
 ## 2026-10-01 (vérifications avant livraison)
 
 Aucune modification de code. Stack lancée avec `docker compose` et un

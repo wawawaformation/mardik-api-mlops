@@ -591,7 +591,7 @@ relecture future ne le « nettoie ».
 
 **3. `alerte-eval.yml` rend le lot A payant sur quatre chemins** :
 `models/*/config.yaml`, `app/pipeline/**`, `app/llm_client.py`, `eval/**`.
-Un push sur `feature/**` qui les touche déclenche 12 contrats d'évaluation
+Un push sur `feature/**` ou `fix/**` (ajouté le 2026-10-01) qui les touche déclenche 12 contrats d'évaluation
 réelle. Ce workflow **ne pose aucun tag et ne reçoit aucun jeton
 d'écriture** : s'il posait `eval-ok`, on obtiendrait la preuve sans passer
 par la revue et l'ordre revue → gate s'effondrerait (I2 + I6). Une alerte

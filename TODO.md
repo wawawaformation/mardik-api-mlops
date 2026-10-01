@@ -15,7 +15,8 @@
 - [ ] Committer les changements Bruno de l'utilisateur (dossier `caddy`
       déplacé dans `demo-cto-caddy`, fichiers `folder.bru`) et mettre à jour
       les docs qui citent encore `bruno/caddy/`
-- [ ] Décider du sort de la modif locale de `.github/workflows/alerte-eval.yml`
+- [x] Décider du sort de la modif locale de `.github/workflows/alerte-eval.yml`
+      (2026-10-01 : gardée — alerte étendue à `fix/**`, voir `CHANGELOG.md`)
 - [ ] Pousser `feature/demo-ci` (36 commits ; déclenche l'éval payante)
 - [ ] PR `feature/demo-ci` → `dev`, puis `dev` → `main` : `ci`, `revue`,
       `gate`, `cd-main` au vert

@@ -1,7 +1,9 @@
 name: Alerte évaluation (lot A)
 
-# I6 — signal, pas preuve. Un push sur une branche de travail qui touche un
-# chemin capable de déplacer la note joue l'évaluation réelle (payante) et
+# I6 — signal, pas preuve. Un push sur une branche de travail (`feature/**`
+# ou `fix/**` : un correctif du prompt déplace la note autant qu'une
+# fonctionnalité) qui touche un chemin capable de déplacer la note joue
+# l'évaluation réelle (payante) et
 # l'affiche. Aucun tag n'est posé : la seule évaluation qui fait foi reste
 # celle du lot C, après la revue (gate.yml). Si celle-ci posait eval-ok, on
 # obtiendrait la preuve sans passer par la revue et l'ordre revue -> gate
@@ -21,6 +23,7 @@ on:
   push:
     branches:
       - "feature/**"
+      - "fix/**"
     paths:
       - "models/*/config.yaml"
       - "app/pipeline/**"
