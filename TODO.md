@@ -12,9 +12,9 @@
       (2026-10-01, `MOCK=on`, voir `CHANGELOG.md`)
 - [x] Revérifier `uv run pytest -q` (144 verts) et `ruff check` (propre)
       (2026-10-01)
-- [ ] Committer les changements Bruno de l'utilisateur (dossier `caddy`
+- [x] Committer les changements Bruno de l'utilisateur (dossier `caddy`
       déplacé dans `demo-cto-caddy`, fichiers `folder.bru`) et mettre à jour
-      les docs qui citent encore `bruno/caddy/`
+      les docs qui citent encore `bruno/caddy/` (2026-10-01)
 - [x] Décider du sort de la modif locale de `.github/workflows/alerte-eval.yml`
       (2026-10-01 : gardée — alerte étendue à `fix/**`, voir `CHANGELOG.md`)
 - [ ] Pousser `feature/demo-ci` (36 commits ; déclenche l'éval payante)

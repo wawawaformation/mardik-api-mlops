@@ -42,7 +42,7 @@
 
 ## Scénario 2 — Routage `/v1` (API v1 via Caddy)
 
-**Étant donné** Bruno ouvert sur la collection `bruno/`, dossier `caddy/`,
+**Étant donné** Bruno ouvert sur la collection `bruno/`, dossier `demo-cto-caddy/caddy/`,
 **quand** j'exécute `02-v1-analyse.bru`,
 **alors** la réponse est **200** avec les clauses détectées
 (`durée`, `reconduction tacite`, `résiliation`, `pénalité de retard`,
@@ -96,7 +96,7 @@
 ## Scénario 6 — Deux clients, un seul point d'entrée (démo live)
 
 **Étant donné** le navigateur ouvert sur `http://localhost:8090/journal.html`
-(ou `index.html`) et Bruno ouvert sur `bruno/caddy/`,
+(ou `index.html`) et Bruno ouvert sur `bruno/demo-cto-caddy/caddy/`,
 **quand** j'exécute `02-v1-analyse` puis `03-v2-analyse` dans Bruno,
 **alors** un rafraîchissement de la page dans le navigateur fait apparaître
 ces nouvelles requêtes dans le journal / tableau de bord — preuve que

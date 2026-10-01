@@ -2,6 +2,13 @@
 
 > Tracé horodaté, ordre inverse (plus récent en premier).
 
+## 2026-10-01 (réorganisation de la collection Bruno)
+
+- **`bruno/caddy/` déplacé dans `bruno/demo-cto-caddy/caddy/`** (requêtes
+  inchangées), numéros d'ordre (`seq`) de `demo-cto-caddy/` décalés, et un
+  `folder.bru` par dossier pour fixer l'ordre d'affichage dans Bruno.
+  `docs/cahier-de-recettes-demo-caddy.md` pointe sur le nouveau chemin.
+
 ## 2026-10-01 (alerte d'évaluation étendue aux branches `fix/**`)
 
 - **`alerte-eval.yml`** se déclenche aussi sur `fix/**` (en plus de
