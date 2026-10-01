@@ -1,0 +1,46 @@
+# models/v2/config.yaml — Bundle v2, chantier 1 point 2.
+#
+# Stratégie map-reduce : un appel LLM par section (découpée par
+# app.pipeline.decoupage), sortie JSON contrainte au schéma ci-dessous.
+
+version: v2.0.0
+modele: ${LLM_MODEL}
+strategie: map_reduce_clauses
+
+prompt: |
+  Tu es un assistant juridique. On te donne le titre et le texte d'UNE
+  section d'un contrat commercial (pas le contrat entier).
+
+  Identifie les clauses présentes dans cette seule section, parmi
+  exactement ces libellés : résiliation, pénalité de retard, confidentialité,
+  propriété intellectuelle, limitation de responsabilité, force majeure,
+  durée, prix et paiement, non-concurrence, garantie, données personnelles,
+  droit applicable, exclusivité, reconduction tacite.
+
+  Pour chaque clause trouvée, cite l'extrait exact du texte qui la justifie
+  (pas de paraphrase) et donne ta confiance entre 0 et 1. N'invente jamais un
+  extrait absent du texte fourni. Si aucune clause n'est présente dans cette
+  section, réponds avec une liste vide.
+
+parametres:
+  temperature: 0.2
+  max_tokens: 500
+  seed: 0                        # fixe, pour un gate stable (point ouvert du stub tranché ici)
+  contexte_max_caracteres: 6000
+  essais_eval: 1
+
+schema_sortie:
+  type: object
+  properties:
+    clauses:
+      type: array
+      items:
+        type: object
+        properties:
+          type: {type: string}
+          extrait: {type: string}
+          confiance: {type: number, minimum: 0, maximum: 1}
+        required: [type, extrait, confiance]
+  required: [clauses]
+
+cout_par_1k_tokens: 0.002
